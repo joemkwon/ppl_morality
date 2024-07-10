@@ -1,0 +1,147 @@
+// Define the grid
+var grid = [
+    ['S', 'S', 'S', 'S', 'S', 'S', 'S', 'S', 'S', 'H'],
+    ['S', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G'],
+    ['S', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G'],
+    ['S', 'G', 'G', 'G', 'G', 'S', 'G', 'G', 'G', 'G'],
+    ['S', 'G', 'G', 'G', 'S', 'S', 'G', 'G', 'G', 'G'],
+    ['S', 'S', 'S', 'S', 'S', 'S', 'S', 'S', 'S', 'C'],
+    ['S', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'S'],
+    ['S', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'S'],
+    ['S', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'S'],
+    ['S', 'S', 'S', 'S', 'S', 'S', 'S', 'S', 'S', 'S']
+];
+
+// Stochastic properties and parameters
+var grassFragility = gaussian(0.5, 0.1);
+var grassCapacity = 50;
+var maxGrassTraffic = grassFragility * grassCapacity;
+var totalGrassTraffic = 0;
+var grassDead = false;
+
+// Functions for utility and cost
+function getTerrainUtility(x, y) {
+  var terrain = grid[y][x];
+  switch(terrain) {
+    case 'H': return 1000; // Hospital utility
+    case 'C': return 100;  // Coffee shop utility
+    default: return 0;
+  }
+}
+
+function getTerrainCost(x, y) {
+  var terrain = grid[y][x];
+  if (terrain === 'S') {
+    return -1; // Sidewalk cost
+  } else if (terrain === 'G') {
+    return -1; // Grass cost
+  }
+  return 0;
+}
+
+// Search for all goal coordinates
+var hospitalCoords = [];
+var coffeeShopCoords = [];
+
+for (var y = 0; y < grid.length; y++) {
+  for (var x = 0; x < grid[y].length; x++) {
+    if (grid[y][x] === 'H') {
+      hospitalCoords.push({x: x, y: y});
+    } else if (grid[y][x] === 'C') {
+      coffeeShopCoords.push({x: x, y: y});
+    }
+  }
+}
+
+// Check if coordinates match any goal
+function isGoalReached(goal, x, y) {
+  if (goal === 'H') {
+    return hospitalCoords.some(coord => coord.x === x && coord.y === y);
+  } else if (goal === 'C') {
+    return coffeeShopCoords.some(coord => coord.x === x && coord.y === y);
+  }
+  return false;
+}
+
+// Simulation of agents
+var numPeople = gaussian(200, 50);
+var peopleGoals = repeat(numPeople, function() { return flip(0.05) ? 'H' : 'C'; });
+
+// Sidewalk-only simulation
+var simulatePersonSidewalkOnly = function(goal) {
+  var startX = 0;
+  var startY = 0; // keep it simple for now
+//   var startY = sample(Uniform({a: 0, b: 9})); // if we want to randomize starting position on the left side of map
+  var currentX = startX;
+  var currentY = startY;
+  
+  var totalUtility = 0;
+  while (currentX < 10 && currentY < 10) {
+    if (grid[currentY][currentX] === 'G') {
+      totalGrassTraffic += 1; // Increment traffic each time grass is stepped on
+      if (!grassDead && totalGrassTraffic > maxGrassTraffic) {
+        grassDead = true;
+        totalUtility -= 2000; // Apply one-time penalty when grass dies
+      }
+    }
+    
+    totalUtility += getTerrainUtility(currentX, currentY);
+    totalUtility += getTerrainCost(currentX, currentY);
+    
+    if (isGoalReached(goal, currentX, currentY)) {
+      break; // Reached goal
+    }
+    
+    // Move right only if the next step is sidewalk, else move down
+    if (currentX < 9 && grid[currentY][currentX + 1] === 'S') {
+      currentX += 1;
+    } else if (currentY < 9) {
+      currentY += 1;
+    } else {
+      break;
+    }
+  }
+  
+  return totalUtility;
+};
+
+// Shortest path simulation
+var simulatePersonShortestPath = function(goal) {
+  var startX = 0;
+  var startY = 0; // keep it simple for now
+//   var startY = sample(Uniform({a: 0, b: 9}));
+  var currentX = startX;
+  var currentY = startY;
+  
+  var totalUtility = 0;
+  while (currentX < 10 && currentY < 10) {
+    if (grid[currentY][currentX] === 'G') {
+      totalGrassTraffic += 1; // Increment traffic each time grass is stepped on
+      if (!grassDead && totalGrassTraffic > maxGrassTraffic) {
+        grassDead = true;
+        totalUtility -= 1000; // Apply one-time penalty when grass dies
+      }
+    }
+    
+    totalUtility += getTerrainUtility(currentX, currentY);
+    totalUtility += getTerrainCost(currentX, currentY);
+    
+    if (isGoalReached(goal, currentX, currentY)) {
+      break; // Reached goal
+    }
+    
+    currentX += 1; // Move right
+  }
+  
+  return totalUtility;
+};
+
+// Evaluate expected utility where everyone stays on the sidewalk or everyone takes the shortest path
+var expectedUtilitiesSidewalkOnly = map(simulatePersonSidewalkOnly, peopleGoals);
+var averageUtilitySidewalkOnly = sum(expectedUtilitiesSidewalkOnly) / numPeople;
+
+var expectedUtilitiesShortestPath = map(simulatePersonShortestPath, peopleGoals);
+var averageUtilityShortestPath = sum(expectedUtilitiesShortestPath) / numPeople;
+
+console.log("Average Utility (Sidewalk Only): ", averageUtilitySidewalkOnly);
+console.log("Average Utility (Shortest Path): ", averageUtilityShortestPath);

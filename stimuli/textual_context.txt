@@ -1,0 +1,22 @@
+Stuff about REASON for going to the goal
+HOSPITAL
+- Agent is going to the hospital to drop off some flyers for a fundraiser.
+- Agent is going to the hospital to see a friend who is a patient.
+- Agent is going to the hospital because of an emergency accident.
+- Agent is going to the hospital to visit a sick relative.
+
+COFFEE SHOP
+- Agent is going for their daily cup of coffee.
+- Agent is going to the coffee shop to meet a friend.
+- Agent is going to the coffee shop to study.
+- Agent is going to the coffee shop for an interview and they are late.
+
+
+Stuff about Agent and Terrain
+- Agent is allergic to grass
+- Agent is severely allergic to grass
+- The agent lost their shoes and the sidewalk is very hot  
+- The sidewalks have lots of cracks and the agent is wearing high heels
+- The grass is wet and the agent is wearing sandals
+- The agent is in a wheelchair.
+

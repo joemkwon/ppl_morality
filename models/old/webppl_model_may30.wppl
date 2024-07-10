@@ -1,0 +1,115 @@
+// Define the gridworld layout
+var grid = [
+  ['S', 'S', 'S', 'S', 'S', 'S', 'S', 'S', 'S', 'H'],
+  ['S', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G'],
+  ['S', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G'],
+  ['S', 'G', 'G', 'G', 'G', 'S', 'G', 'G', 'G', 'G'],
+  ['S', 'G', 'G', 'G', 'S', 'S', 'G', 'G', 'G', 'G'],
+  ['S', 'S', 'S', 'S', 'S', 'S', 'S', 'S', 'S', 'C'],
+  ['S', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'S'],
+  ['S', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'S'],
+  ['S', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'S'],
+  ['S', 'S', 'S', 'S', 'S', 'S', 'S', 'S', 'S', 'S']
+];
+
+// Helper function to sample a person's goal and utility
+var sampleGoalAndUtility = function() {
+  var goal = categorical({ps: [0.95, 0.05], vs: ['C', 'H']});
+  var utility = goal === 'H' ? uniform(100, 500) : uniform(10, 20);
+  return {goal: goal, utility: utility};
+};
+
+// Model definition
+var model = function() {
+  var number_of_people = gaussian(100, 10);
+  // Ensure the number of people is a whole number
+  number_of_people = Math.round(number_of_people);
+
+  // Initialize each person
+  var people = repeat(number_of_people, sampleGoalAndUtility);
+
+  // Assume each person starts at the bottom left of the grid for now
+  var initial_position = [0, 0];  
+
+  // Simulate a person moving towards their goal
+    var simulatePerson = function(person) {
+    var current_position = initial_position;
+    var utility = person.utility; // Starting utility, modified to accumulate terrain costs
+    var steps = 0;
+    var maxSteps = 100;  // Maximum allowed steps to avoid infinite loops
+
+    var moveAndUpdate = function() {
+        if (steps >= maxSteps) {
+        return utility;  // Return final utility if max steps are reached
+        }
+
+        // Movement logic here (simplified as random walk)
+        var next_step = sample(categorical({ps: [0.25, 0.25, 0.25, 0.25], vs: [[0,1], [1,0], [0,-1], [-1,0]]}));
+        current_position[0] += next_step[0];
+        current_position[1] += next_step[1];
+
+        // Ensure the position stays within grid bounds
+        current_position[0] = Math.max(0, Math.min(current_position[0], grid.length - 1));
+        current_position[1] = Math.max(0, Math.min(current_position[1], grid[0].length - 1));
+
+        // Check terrain and update utility
+        var terrain = grid[current_position[0]][current_position[1]];
+        if (terrain === 'S' || terrain === 'G') {
+        utility += sample(uniform(-1, -1));  // Cost of stepping on a terrain
+        }
+
+        // Check if goal is reached
+        if (grid[current_position[0]][current_position[1]] === person.goal) {
+        utility += person.utility;  // Add the goal's utility to the current utility
+        return utility;  // Return final utility when the goal is reached
+        }
+
+        steps++;
+        return moveAndUpdate();  // Recursive call to continue simulation
+    };
+
+    return moveAndUpdate();
+};
+
+  var simulatePerson = function(person) {
+    var current_position = initial_position;
+    var utility = person.utility;
+    var steps = 0;
+    var maxSteps = 100;  // Maximum allowed steps
+
+    while (steps < maxSteps) {
+      // Movement logic here (simplified as random walk)
+      var next_step = categorical({ps: [0.25, 0.25, 0.25, 0.25], vs: [[0,1], [1,0], [0,-1], [-1,0]]});
+      current_position[0] += next_step[0];
+      current_position[1] += next_step[1];
+
+      // Ensure the position stays within grid bounds
+      current_position[0] = Math.max(0, Math.min(current_position[0], grid.length - 1));
+      current_position[1] = Math.max(0, Math.min(current_position[1], grid[0].length - 1));
+
+      // Check terrain and update utility
+      var terrain = grid[current_position[0]][current_position[1]];
+      if (terrain === 'S' || terrain === 'G') {
+        utility += -1;  // Cost of stepping on a terrain
+      }
+
+      // Check if goal is reached
+      if (grid[current_position[0]][current_position[1]] === person.goal) {
+        utility += person.utility;
+        break;
+      }
+
+      steps++;
+    }
+
+    return utility;
+  };
+
+  // Run simulation for each person and collect utilities
+  var utilities = map(simulatePerson, people);
+  return utilities;
+};
+
+// Sample from the model
+var output = Infer({method: 'forward', samples: 100}, model);
+print(output);

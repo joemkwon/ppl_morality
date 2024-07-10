@@ -1,0 +1,171 @@
+<START_SCENARIO>
+SCENE
+[IMAGE PLACEHOLDER]
+
+BACKGROUND
+Model a scenario where someone is navigating to a destination and can travel through various trajectories. The agent's action is morally evaluated.
+
+CONDITIONS
+There is a sign that says "Keep off the grass."
+The current observed trajectory of the agent is [{loc: [0,0]}, {loc: [0,1]}, {loc: [0,2]}, {loc: [0,3]}, {loc: [0,4]}, {loc: [0,5]}];
+
+QUERIES
+How morally acceptable is the agent's action from a scale of -50 to 50?
+// -50 = extremely unacceptable, 50 score = extremely acceptable, 0 = neutral
+<END_SCENARIO>
+
+<START_LANGUAGE_TO_WEBPPL_CODE>
+[IMAGE PLACEHOLDER]
+var H = { name: 'Hospital', loc: [9,0] }; // possible destination inferred from image
+var C = { name: 'Coffee_shop', loc: [9,5] }; // possible destination inferred from image
+var G = { name: 'Grass' }; 
+var S = { name: 'Sidewalk' };
+var T = { name: 'Toxic' };
+
+var grid = [
+  ['S', 'S', 'S', 'S', 'S', 'S', 'S', 'T', 'T', 'H'],
+  ['S', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G'],
+  ['S', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G'],
+  ['S', 'G', 'G', 'G', 'G', 'T', 'G', 'G', 'G', 'G'],
+  ['S', 'G', 'G', 'G', 'T', 'T', 'G', 'G', 'G', 'G'],
+  ['S', 'S', 'S', 'S', 'S', 'S', 'S', 'S', 'S', 'C'],
+  ['S', 'G', 'T', 'T', 'G', 'G', 'G', 'G', 'G', 'S'],
+  ['S', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'S'],
+  ['S', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'S'],
+  ['S', 'S', 'S', 'S', 'S', 'S', 'S', 'S', 'S', 'S']
+]; // 10x10 gridworld inferred from image
+var start = [0, 0]; // agent starting coordinate inferred from image
+var mdp = makeGridWorldMDP({ grid, start }); // initialize gridworld MDP
+
+var observed_trajectory = [{loc: [0,0]}, {loc: [0,1]}, {loc: [0,2]}, {loc: [0,3]}, {loc: [0,4]}, {loc: [0,5]}];
+
+There is a sign that says "Keep off the grass."
+    condition(rule('keep_off_grass'))
+
+How morally acceptable is the agent's action?
+    return moral_evaluation('agent_trajectory')
+<END_LANGUAGE_TO_WEBPPL_CODE>    
+
+
+<START_SCRATCHPAD>
+
+<END_SCRATCHPAD>
+
+<START_WEBPPL_MODEL>
+var model = function() {
+    var rule_exists = true;  // Set the initial rule status
+
+    // Define terrain types and their initial assumed utility and cost ranges
+    var terrainTypes = {
+        'S': {utility: gaussian(0, 1), cost: gaussian(-0.1, 0.1)},  // Sidewalk
+        'G': {utility: gaussian(0, 1), cost: rule_exists ? gaussian(-1, 0.1) : gaussian(-0.1, 0.1)},  // Grass
+        'T': {utility: gaussian(0, 1), cost: gaussian(-5, 0.5)},  // Toxic terrain
+        'H': {utility: gaussian(70, 15), cost: gaussian(0, 0.1)},  // Hospital
+        'C': {utility: gaussian(30, 10), cost: gaussian(0, 0.1)}  // Coffee shop
+    };
+
+    // Define the grid layout
+    var grid = [
+        ['S', 'S', 'S', 'S', 'S', 'S', 'S', 'T', 'T', 'H'],
+        ['S', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G'],
+        ['S', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G'],
+        ['S', 'G', 'G', 'G', 'G', 'T', 'G', 'G', 'G', 'G'],
+        ['S', 'G', 'G', 'G', 'T', 'T', 'G', 'G', 'G', 'G'],
+        ['S', 'S', 'S', 'S', 'S', 'S', 'S', 'S', 'S', 'C'],
+        ['S', 'G', 'T', 'T', 'G', 'G', 'G', 'G', 'G', 'S'],
+        ['S', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'S'],
+        ['S', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'S'],
+        ['S', 'S', 'S', 'S', 'S', 'S', 'S', 'S', 'S', 'S']
+    ];
+
+    // Observed trajectory of movement
+    var observed_trajectory = [{x: 0, y: 0}, {x: 0, y: 1}, {x: 0, y: 2}, {x: 0, y: 3}, {x: 0, y: 4}, {x: 0, y: 5}];
+    var start = {x: 0, y: 0};
+
+    var valueIteration = function(grid, terrainTypes, maxIterations) {
+        // Initialize the value function (V) and policy for each grid cell
+        var V = grid.map(row => row.map(type => terrainTypes[type].utility - terrainTypes[type].cost));
+        var policy = grid.map(row => row.map(() => null));
+
+        // Iterate up to maxIterations to update the value function and policy
+        for (var iter = 0; iter < maxIterations; iter++) {
+            // Copy the current value function to newV for updates
+            var newV = grid.map(row => row.slice());
+            // Iterate through each cell in the grid
+            for (var x = 0; x < grid.length; x++) {
+                for (var y = 0; y < grid[0].length; y++) {
+                    // Define possible actions (right, left, down, up)
+                    var actions = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+                    var bestValue = V[x][y];  // Initialize bestValue with current cell value
+                    var bestMove = null;  // Initialize bestMove with null
+                    // Evaluate each possible action
+                    actions.forEach(move => {
+                        var nx = x + move[0], ny = y + move[1];
+                        // Check if the new position is within grid bounds
+                        if (nx >= 0 && nx < grid.length && ny >= 0 && ny < grid[0].length) {
+                            // Calculate the value of the new position
+                            var value = V[nx][ny] + 0.9 * newV[nx][ny];  // Discount factor 0.9
+                            // Update bestValue and bestMove if this action is better
+                            if (value > bestValue) {
+                                bestValue = value;
+                                bestMove = move;
+                            }
+                        }
+                    });
+                    // Update newV and policy for the current cell
+                    newV[x][y] = bestValue;
+                    policy[x][y] = bestMove;
+                }
+            }
+            V = newV;  // Update V with the new values
+        }
+        return {values: V, policy: policy};  // Return the computed values and policy
+    };
+
+    // Compute the optimal policy and values using value iteration
+    var result = valueIteration(grid, terrainTypes, 100);
+
+    var compareTrajectories = function(observed, policy, start) {
+        var current = start;  // Initialize the current position
+        var matches = 0;  // Counter for matching steps in the trajectories
+        // Iterate through each step in the observed trajectory
+        observed.forEach(function(step) {
+            // Check if the current position matches the observed step
+            if (current.x === step.x && current.y === step.y) {
+                matches++;
+            }
+            // Get the policy move for the current position
+            var move = policy[current.x][current.y];
+            // Update the current position if a valid move exists
+            if (move !== null) {
+                current = {x: current.x + move[0], y: current.y + move[1]};
+            }
+        });
+        return matches / observed.length;  // Return the proportion of matching steps
+    };
+
+    var updateBeliefs = function(grid, terrainTypes, observed, result) {
+        var matchProportion = compareTrajectories(observed, result.policy, start);  // Calculate trajectory match proportion
+        // Iterate through each cell in the grid
+        for (var x = 0; x < grid.length; x++) {
+            for (var y = 0; y < grid[0].length; y++) {
+                var type = grid[x][y];  // Get the terrain type of the current cell
+                // Update the utility of the terrain type based on match proportion
+                terrainTypes[type].utility = terrainTypes[type].utility + matchProportion * gaussian(1, 0.5)();
+                // Update the cost of the terrain type based on match proportion
+                terrainTypes[type].cost = terrainTypes[type].cost + matchProportion * gaussian(-0.5, 0.2)();
+            }
+        }
+        return terrainTypes;  
+    };
+
+    // Update terrain types with new beliefs
+    var updatedTerrainTypes = updateBeliefs(grid, terrainTypes, observed_trajectory, result);
+
+    return updatedTerrainTypes;
+};
+
+// Run inference using MCMC
+var posterior = Infer({model: model, method: 'MCMC', samples: 1000});
+viz(posterior);
+<END_WEBPPL_MODEL>

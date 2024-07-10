@@ -1,0 +1,199 @@
+// Define the grid
+var grid = [
+    ['S', 'S', 'S', 'S', 'S', 'S', 'S', 'S', 'S', 'H'],
+    ['S', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G'],
+    ['S', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G'],
+    ['S', 'G', 'G', 'G', 'G', 'S', 'G', 'G', 'G', 'G'],
+    ['S', 'G', 'G', 'G', 'S', 'S', 'G', 'G', 'G', 'G'],
+    ['S', 'S', 'S', 'S', 'S', 'S', 'S', 'S', 'S', 'C'],
+    ['S', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'S'],
+    ['S', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'S'],
+    ['S', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'S'],
+    ['S', 'S', 'S', 'S', 'S', 'S', 'S', 'S', 'S', 'B']
+];
+
+var maxGrassTraffic = gaussian(100,15)
+var totalGrassTraffic = 0;
+var grassDead = false;
+
+// Functions for utility and cost
+function getTerrainUtility(x, y) {
+  var terrain = grid[y][x];
+  switch(terrain) {
+    case 'H': return 1000; // Urgent care center utility
+    case 'B': return 400   // Bus stop utility
+    case 'C': return 100;  // Coffee shop utility
+    default: return 0;
+  }
+}
+
+function getTerrainCost(x, y) {
+  var terrain = grid[y][x];
+  if (terrain === 'S') {
+    return -1; // Sidewalk cost
+  } else if (terrain === 'G') {
+    return -1; // Grass cost
+  }
+  return 0;
+}
+
+// Search for all goal coordinates
+var hospitalCoords = [];
+var busStopCoords = [];
+var coffeeShopCoords = [];
+
+for (var y = 0; y < grid.length; y++) {
+  for (var x = 0; x < grid[y].length; x++) {
+    if (grid[y][x] === 'H') {
+        hospitalCoords.push({x: x, y: y});
+    } else if (grid[y][x] === 'C') {
+        coffeeShopCoords.push({x: x, y: y});
+    } else if (grid[y][x] === 'B') {
+        busStopCoords.push({x: x, y: y});  
+    }
+  }
+}
+
+// Check if coordinates match any goal
+function isGoalReached(goal, x, y) {
+  if (goal === 'H') {
+    return hospitalCoords.some(coord => coord.x === x && coord.y === y);
+  } else if (goal === 'C') {
+    return coffeeShopCoords.some(coord => coord.x === x && coord.y === y);
+  } else if (goal === 'B') {
+    return coffeeShopCoords.some(coord => coord.x === x && coord.y === y);
+  }
+  return false;
+}
+
+// Simulation of agents
+var numPeople = gaussian(200, 50);
+var peopleGoals = repeat(numPeople, function() { return flip(0.05) ? 'H' : 'C'; });
+
+
+// From meeting call, actual planning agent simulates numPeople IF those people had a goal sampled which are higher utility than their own sampled goal.
+var simulateSophistcatedReasoner 
+1. person has a goal, and they have a certain utility for their goal.
+2. first the person simulates the subset of total people (numPeople) who have goals 
+whose utilities are equal or higher to the utility of their own goal
+3. all of these people who are being simulated just do a shortest path walk with the 
+cost of grass and sidewalk being the same? Or if we are universalizing people who have an  
+inherent concern/cost for grass, the grass should be a larger negative value than sidewalk.
+
+-- how do we do this simulation/planning actually? Value iteration? clarification on how this works
+at pseudocode level would be helpful
+
+4. Now we have finished simulating the other agents and we know how many times the grass
+was stepped on because of the grass traffic counter. This then informs the agent's own
+cost function for the grass. 
+
+-- how do we actually incoroporate the cost function for the grass using the simulation information?
+What kind of function do we want to use?
+
+Need to keep track of the following things:
+community utility if they simulate everyone with goal utility >= their own if rule following (set cost of grass to extremely negative value) vs rule exceptional (regular shortest-path agent with cost of grass/sidewalk same.)
+net utility if everyone follows rule or doesnt
+whichever of the two utilities is greater, that informs the meta action of the agent themselves.
+at the end, planning with that choice to decide what particular action to take.
+
+-------
+this agent is like a 2-step hierarchical reasoner. Do I follow rule or think of path to take?
+Simple agent doesn't have to simulate agents to do this just plan with rule or without rule.
+This strategy depends on simulating other agents
+
+"Dont walk on the grass" -> huge negative cost on grass terrain
+Another way, which isn't as easy is planning a bunch of paths and excluding ones that have grass in trajectory
+
+When you simulate everyone following the rule:
+- In forward simulation there are 3 components,
+* this is the planning model. 
+* these are happening per step. you usually check the reward in each state, but since we have a very sparse reward structure
+where you only have the reward at the very end when you reach one of the 3 locations
+---[this is the part that lets us model rule exceptional or rule following agents] 
+artificially imposed cost of not following the rule (if they choose to make an exception "rule doesn't apply to me" then value can be 0)
+------ per step as well -- just the constant cost applied each time they step on grass
+--- cost of grass/sidewalk (the action of moving in some direction) (if grass is stepped on, then cost is negative)
+--- reward of reaching one of the three goals
+
+Simulation:
+Doubly nested loop: 
+- for *all* agents in the community, sample what the agent's goal is and their goal's utility as well as other parts of their cost function (e.g. individual cost for terrain)
+now simulate that agent under at most, 2 different conditions. rule following and rule exceptional (if they are one of the people who have a goal utility >= their own goal utility)
+For both sequences of actions, what is the individual cost to the agent in each condition? E.g. total reward - cost to themselves of all the actions they took going over terrain. (all of this calculated by planning model, but cheap to recalculate)
+Add both of these to a meta-counter (like a running counter) of all the utilities of the agents that we're simulating. 
+One counter for when people make exceptions and when people follow the rule.
+We also want to keep track of how many times people stepped on the grass.
+
+Now we are done simulating all the agents, and we use the information we collected to modulate our grass cost for the main agent.
+community version:
+- if the community utility of people following the rule is greater than the community utility of people not following the rule, then the agent should follow the rule.
+sometimes both 0 which is a feature not a bug
+potentially undesirable feature (we'll see from human pilot data) of this is that people will go right for the goal location (lots of people going to the coffee shop) and not care about the grass.
+- for all agents simulated: total sum of rewards for everyone getting to goals, how long path was (cost of actions), and the penalty for walking on the grass (how many times did people step on this)
+- the group utility calculated above just tells agent break rule or not. 
+- you could technically still make a probabilistic choice about what to do given the utilities 
+- choose action to follow or break the rule and then plan the path to take (just use same planning model as used when simulating agents)
+
+
+personal reward:
+- mean personal cost, mean personal reward, subtract personal loss of stepping on grass and it dying
+- very similar but *down-weights* edge cases because we're just looking at the mean utilities 
+- still expected utility on rule following vs. rule exception and you can still make the same decision about rule following or not
+
+
+- Then there are other components for evaluation
+---
+---
+
+
+joe notes to self:
+- agent model itself may need to infer number of people and their goals and goal utilities instead of getting that directly 
+- rather than simulating community utility, want one agent model which gets selfish/utility to self.
+- sample agents with their specific goals (remove the current way where obviously everyone goes to the hospital)
+- some things that aren't being modeled right now: not really any notion of urgency for path being too long.
+- e.g. someone going to hospital has a much larger negative value in cost for taking steps
+- potential concern: relatively little deviation in paths taken
+- better intuitive model for hospital: with each step i dont get there, im accumulating some major personal cost. 
+
+
+
+// Shortest path simulation
+var simulatePersonShortestPath = function(goal) {
+  var startX = 0;
+  var startY = 0; // keep it simple for now
+//   var startY = sample(Uniform({a: 0, b: 9}));
+  var currentX = startX;
+  var currentY = startY;
+  
+  var totalUtility = 0;
+  while (currentX < 10 && currentY < 10) {
+    if (grid[currentY][currentX] === 'G') {
+      totalGrassTraffic += 1; // Increment traffic each time grass is stepped on
+      if (!grassDead && totalGrassTraffic > maxGrassTraffic) {
+        grassDead = true;
+        totalUtility -= 1000; // Apply one-time penalty when grass dies
+      }
+    }
+    
+    totalUtility += getTerrainUtility(currentX, currentY);
+    totalUtility += getTerrainCost(currentX, currentY);
+    
+    if (isGoalReached(goal, currentX, currentY)) {
+      break; // Reached goal
+    }
+    
+    currentX += 1; // Move right
+  }
+  
+  return totalUtility;
+};
+
+// Evaluate expected utility where everyone stays on the sidewalk or everyone takes the shortest path
+var expectedUtilitiesSidewalkOnly = map(simulatePersonSidewalkOnly, peopleGoals);
+var averageUtilitySidewalkOnly = sum(expectedUtilitiesSidewalkOnly) / numPeople;
+
+var expectedUtilitiesShortestPath = map(simulatePersonShortestPath, peopleGoals);
+var averageUtilityShortestPath = sum(expectedUtilitiesShortestPath) / numPeople;
+
+console.log("Average Utility (Sidewalk Only): ", averageUtilitySidewalkOnly);
+console.log("Average Utility (Shortest Path): ", averageUtilityShortestPath);

@@ -1,0 +1,144 @@
+<START_SCENARIO>
+SCENE
+[IMAGE PLACEHOLDER]
+
+BACKGROUND
+Model a scenario where someone is navigating to a destination and can travel through various trajectories. The agent's action is morally evaluated.
+
+CONDITIONS
+There is a sign that says "Keep off the grass."
+The current observed trajectory of the agent is [{loc: [0,0]}, {loc: [0,1]}, {loc: [0,2]}, {loc: [0,3]}, {loc: [0,4]}, {loc: [0,5]}];
+
+QUERIES
+How morally acceptable is the agent's action from a scale of -50 to 50?
+// -50 = extremely unacceptable, 50 score = extremely acceptable, 0 = neutral
+<END_SCENARIO>
+
+<START_LANGUAGE_TO_WEBPPL_CODE>
+[IMAGE PLACEHOLDER]
+var H = { name: 'Hospital', loc: [9,0] }; // possible destination inferred from image
+var C = { name: 'Coffee_shop', loc: [9,5] }; // possible destination inferred from image
+var G = { name: 'Grass' }; 
+var S = { name: 'Sidewalk' };
+var T = { name: 'Toxic' };
+
+var grid = [
+  ['S', 'S', 'S', 'S', 'S', 'S', 'S', 'T', 'T', 'H'],
+  ['S', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G'],
+  ['S', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G'],
+  ['S', 'G', 'G', 'G', 'G', 'T', 'G', 'G', 'G', 'G'],
+  ['S', 'G', 'G', 'G', 'T', 'T', 'G', 'G', 'G', 'G'],
+  ['S', 'S', 'S', 'S', 'S', 'S', 'S', 'S', 'S', 'C'],
+  ['S', 'G', 'T', 'T', 'G', 'G', 'G', 'G', 'G', 'S'],
+  ['S', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'S'],
+  ['S', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'S'],
+  ['S', 'S', 'S', 'S', 'S', 'S', 'S', 'S', 'S', 'S']
+]; // 10x10 gridworld inferred from image
+var start = [0, 0]; // agent starting coordinate inferred from image
+var mdp = makeGridWorldMDP({ grid, start }); // initialize gridworld MDP
+
+var observed_trajectory = [{loc: [0,0]}, {loc: [0,1]}, {loc: [0,2]}, {loc: [0,3]}, {loc: [0,4]}, {loc: [0,5]}];
+
+There is a sign that says "Keep off the grass."
+    condition(rule('keep_off_grass'))
+
+How morally acceptable is the agent's action?
+    return moral_evaluation('agent_trajectory')
+<END_LANGUAGE_TO_WEBPPL_CODE>    
+
+
+<START_SCRATCHPAD>
+
+<END_SCRATCHPAD>
+
+<START_WEBPPL_MODEL>
+// WebPPL Model to infer agent's utilities, costs, and potential actions
+var model = function(){
+  // Sample unique agent ID
+  var agentID = 'Agent_' + Math.ceil(Math.random() * 1000);
+
+  // Attributes sampled for each unique agent
+  var likesHospital = gaussian(70, 10); // mean utility from hospital
+  var likesCoffee = gaussian(20, 5); // mean utility from coffee shop
+  var dislikesGrass = gaussian(-5, 2); // negative cost from grass
+  var dislikesToxic = gaussian(-10, 5); // negative cost from toxic terrain
+  var dislikesSidewalk = gaussian(0, 1); // negligible cost from sidewalk
+
+  // Memoization of utility functions based on agent ID
+  var memoizedUtility = mem(function(locType) {
+    switch(locType) {
+      case 'H': return likesHospital;
+      case 'C': return likesCoffee;
+      case 'G': return dislikesGrass;
+      case 'T': return dislikesToxic;
+      default: return dislikesSidewalk;
+    }
+  });
+
+  // Grid for the environment
+  var grid = [
+    ['S', 'S', 'S', 'S', 'S', 'S', 'S', 'T', 'T', 'H'],
+    ['S', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G'],
+    ['S', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G'],
+    ['S', 'G', 'G', 'G', 'G', 'T', 'G', 'G', 'G', 'G'],
+    ['S', 'G', 'G', 'G', 'T', 'T', 'G', 'G', 'G', 'G'],
+    ['S', 'S', 'S', 'S', 'S', 'S', 'S', 'S', 'S', 'C'],
+    ['S', 'G', 'T', 'T', 'G', 'G', 'G', 'G', 'G', 'S'],
+    ['S', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'S'],
+    ['S', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'S'],
+    ['S', 'S', 'S', 'S', 'S', 'S', 'S', 'S', 'S', 'S']
+  ];
+
+  // Observed trajectory
+  var observed_trajectory = [{loc: [0,0]}, {loc: [0,1]}, {loc: [0,2]}, {loc: [0,3]}, {loc: [0,4]}, {loc: [0,5]}];
+
+  // Map utilities to grid based on observed trajectory
+  var utilities = grid.map(function(row) {
+    return row.map(function(locType) {
+      return memoizedUtility(locType);
+    });
+  });
+
+  // Update utilities based on trajectory
+  observed_trajectory.forEach(function(step) {
+    var loc = step.loc;
+    utilities[loc[0]][loc[1]] += 5;  // Increase utility at observed locations
+  });
+
+  // Value iteration for policy generation
+  var valueIteration = function(utilities) {
+    var V = rep(function() { return rep(0, grid[0].length); }, grid.length);
+    var policy = rep(function() { return rep(null, grid[0].length); }, grid.length);
+    for (var iter = 0; iter < 10; iter++) {
+      var newV = rep(function() { return rep(0, grid[0].length); }, grid.length);
+      for (var x = 0; x < grid.length; x++) {
+        for (var y = 0; y < grid[0].length; y++) {
+          var bestValue = -Infinity;
+          var bestMove = null;
+          [[1, 0], [-1, 0], [0, 1], [0, -1], [0, 0]].forEach(function(move) {
+            var nx = x + move[0], ny = y + move[1];
+            if (nx >= 0 && nx < grid.length && ny >= 0 && ny < grid[0].length) {
+              var value = utilities[nx][ny] + 0.9 * V[nx][ny];
+              if (value > bestValue) {
+                bestValue = value;
+                bestMove = move;
+              }
+            }
+          });
+          newV[x][y] = bestValue;
+          policy[x][y] = bestMove;
+        }
+      }
+      V = newV;
+    }
+    return {values: V, policy: policy};
+  };
+
+  var viResult = valueIteration(utilities);
+  return viResult.policy;
+};
+// Run inference
+var posterior = Infer({model: model, method: 'MCMC', samples: 1000});
+viz(posterior);
+
+<END_WEBPPL_MODEL>

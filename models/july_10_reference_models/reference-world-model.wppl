@@ -1,0 +1,303 @@
+// Define the gridworld map with various locations
+var gridworld = [
+    ['ames', 'lawn', 'lawn', 'lawn', 'sushi'],
+    ['ames', 'lawn', 'lawn', 'lawn', 'danner'],
+    ['office', 'barlow', 'barlow', 'barlow', 'danner'],
+    ['ames', 'lawn', 'lawn', 'lawn', 'danner'],
+    ['ames', 'lawn', 'lawn', 'lawn', 'vegetarian'],
+    ['pizza', 'carson', 'carson', 'carson', 'danner']
+];
+
+// Define the list of restaurants in the gridworld
+var restaurants = ['sushi', 'pizza', 'vegetarian'];
+
+// Initial coordinates of the agent
+var initial_x = 1;
+var initial_y = 3;
+
+// Determine if the agent has a bike, which is a random boolean
+var has_bike = cache(function(agentId) { return flip(); });
+
+// Available motions based on whether the agent has a bike
+var available_motions = cache(function(agentId) {
+    return has_bike(agentId) ? ['is_walking', 'is_biking'] : ['is_walking'];
+});
+
+// Possible directions the agent can move
+var directions = ['west', 'east', 'north', 'south'];
+
+// Define available actions combining motions and directions
+var available_actions = cache(function(agentId) {
+    return ['stay'].concat(cartesianProduct(available_motions(agentId), directions));
+});
+
+// Determine if a restaurant is open, which is a random boolean
+var is_open = cache(function(restaurantType) { return flip(); });
+
+// Define utility constants
+var POSITIVE_UTILITY_MEAN = 10;
+var NEGATIVE_UTILITY_MEAN = -10;
+var UTILITY_VARIANCE = 1;
+
+// Define the utility of restaurants
+var restaurant_utility = cache(function(agentId, restaurantType) {
+    return uniformDraw([
+        gaussian({mu: POSITIVE_UTILITY_MEAN, sigma: UTILITY_VARIANCE}),
+        gaussian({mu: NEGATIVE_UTILITY_MEAN, sigma: UTILITY_VARIANCE})
+    ]);
+});
+
+// Define the utility of motions based on the location type
+var motion_utility = cache(function(agentId, locationType, motionType) {
+    var locationTypeCases = {
+        'lawn': {'is_biking': -1, 'is_walking': -0.2, 'is_staying': 0},
+        'default': {'is_biking': -0.01, 'is_walking': -0.2, 'is_staying': 0}
+    };
+    return (locationTypeCases[locationType] || locationTypeCases['default'])[motionType];
+});
+
+// Define the food utility based on the location type
+var food_utility = cache(function(agentId, locationType) {
+    var locationUtility = {
+        'lawn': 0,
+        'ames': 0,
+        'barlow': 0,
+        'carson': 0,
+        'danner': 0,
+        'office': 0,
+    };
+    return locationUtility[locationType] !== undefined ? locationUtility[locationType] :
+        (is_open(locationType) ? restaurant_utility(agentId, locationType) : NEGATIVE_UTILITY_MEAN);
+});
+
+// Get the type of location in the gridworld at coordinates (x, y)
+var get_gridworld_at = function(gridworld, x, y) {
+    return gridworld[y][x];
+};
+
+// Increment x-coordinate based on direction
+var x_increment = function(direction) {
+    var directionIncrements = {'west': -1, 'east': 1, 'north': 0, 'south': 0, 'stay': 0};
+    return directionIncrements[direction];
+};
+
+// Increment y-coordinate based on direction
+var y_increment = function(direction) {
+    var directionIncrements = {'north': -1, 'south': 1, 'west': 0, 'east': 0, 'stay': 0};
+    return directionIncrements[direction];
+};
+
+// Get the maximum x-dimension of the gridworld
+var gridworld_max_x = function(gridworld) { return gridworld[0].length; };
+
+// Get the maximum y-dimension of the gridworld
+var gridworld_max_y = function(gridworld) { return gridworld.length; };
+
+// Transition to the next state in the gridworld based on action
+var gridworld_transition = function(gridworld, current_x, current_y, action) {
+    var direction = action[1];
+    var next_x = current_x + x_increment(direction);
+    next_x = (next_x < 0 || next_x >= gridworld_max_x(gridworld)) ? current_x : next_x;
+    var next_y = current_y + y_increment(direction);
+    next_y = (next_y < 0 || next_y >= gridworld_max_y(gridworld)) ? current_y : next_y;
+    var next_state = get_gridworld_at(gridworld, next_x, next_y);
+    return [next_state, next_x, next_y];
+};
+
+// Define the total utility function based on the state and action
+var utility_function = cache(function(agentId, gridworld, state_x, state_y, action) {
+    var locationType = get_gridworld_at(gridworld, state_x, state_y);
+    var motionType = action[0];
+    var stateFoodUtility = food_utility(agentId, locationType);
+    var stateMotionUtility = motion_utility(agentId, locationType, motionType);
+    return stateFoodUtility + stateMotionUtility;
+});
+
+// Value function to calculate the utility at a given state and iteration
+var value_function = cache(function(agentId, curr_iteration, gridworld, state_x, state_y) {
+    return curr_iteration === -1 ? 0 : optimal_action_value(agentId, curr_iteration - 1, gridworld, state_x, state_y)[1];
+});
+
+// Map available actions to their values
+var available_actions_to_values = cache(function(agentId, curr_iteration, gridworld, state_x, state_y) {
+    return map(function(action) {
+        var utility = utility_function(agentId, gridworld, state_x, state_y, action);
+        var next_state = gridworld_transition(gridworld, state_x, state_y, action);
+        var next_state_x = next_state[1];
+        var next_state_y = next_state[2];
+        var next_state_value = value_function(agentId, curr_iteration, gridworld, next_state_x, next_state_y);
+        return [action, utility + next_state_value];
+    }, available_actions(agentId));
+});
+
+// Determine the optimal action and its value
+var optimal_action_value = cache(function(agentId, curr_iteration, gridworld, state_x, state_y) {
+    var actions_to_values = available_actions_to_values(agentId, curr_iteration, gridworld, state_x, state_y);
+    return maxWith(actions_to_values, function(pair) { return pair[1]; });
+});
+
+// Define the maximum number of iterations for planning
+var MAX_ITERATIONS = 20;
+
+// Determine if the agent should terminate
+var should_terminate = cache(function(agentId, gridworld, state_x, state_y) {
+    return value_function(agentId, MAX_ITERATIONS, gridworld, initial_x, initial_y) <= 0 ? true :
+        (function() {
+            var locationType = get_gridworld_at(gridworld, state_x, state_y);
+            var stateFoodUtility = food_utility(agentId, locationType);
+            return stateFoodUtility > 0;
+        })();
+});
+
+// Define the optimal policy from the initial state
+var optimal_policy_from_initial_state = cache(function(agentId, gridworld, state_x, state_y) {
+    if (should_terminate(agentId, gridworld, state_x, state_y)) {
+        return [];
+    } else {
+        var curr_optimal_action_value = optimal_action_value(agentId, MAX_ITERATIONS, gridworld, state_x, state_y);
+        var curr_optimal_action = curr_optimal_action_value[0];
+        var next_state = gridworld_transition(gridworld, state_x, state_y, curr_optimal_action);
+        var next_state_x = next_state[1];
+        var next_state_y = next_state[2];
+        var remaining_policy = optimal_policy_from_initial_state(agentId, gridworld, next_state_x, next_state_y);
+        return [curr_optimal_action].concat(remaining_policy);
+    }
+});
+
+// Define the trajectory from the initial state
+var trajectory_from_initial_state = cache(function(agentId, gridworld, state_x, state_y) {
+    if (should_terminate(agentId, gridworld, state_x, state_y)) {
+        return [];
+    } else {
+        var curr_optimal_action_value = optimal_action_value(agentId, MAX_ITERATIONS, gridworld, state_x, state_y);
+        var curr_optimal_action = curr_optimal_action_value[0];
+        var next_state = gridworld_transition(gridworld, state_x, state_y, curr_optimal_action);
+        var next_state_location = next_state[0];
+        var next_state_x = next_state[1];
+        var next_state_y = next_state[2];
+        var remaining_trajectory = trajectory_from_initial_state(agentId, gridworld, next_state_x, next_state_y);
+        return [next_state_location].concat(remaining_trajectory);
+    }
+});
+
+// Define the optimal policy
+var optimal_policy = cache(function(agentId, gridworld, initial_state_x, initial_state_y) {
+    return [['start', 'start']].concat(optimal_policy_from_initial_state(agentId, gridworld, initial_state_x, initial_state_y));
+});
+
+// Define the optimal trajectory
+var optimal_trajectory = cache(function(agentId, gridworld, initial_state_x, initial_state_y) {
+    return [get_gridworld_at(gridworld, initial_state_x, initial_state_y)].concat(trajectory_from_initial_state(agentId, gridworld, initial_state_x, initial_state_y));
+});
+
+// Define the optimal policy with trajectory
+var optimal_policy_with_trajectory = cache(function(agentId, gridworld, initial_state_x, initial_state_y) {
+    return zip(optimal_policy(agentId, gridworld, initial_state_x, initial_state_y), optimal_trajectory(agentId, gridworld, initial_state_x, initial_state_y));
+});
+
+// Get the terminal goal state
+var get_terminal_goal_state = cache(function(agentId, gridworld, initial_state_x, initial_state_y) {
+    return last(optimal_trajectory(agentId, gridworld, initial_state_x, initial_state_y));
+});
+
+// Check if the trajectory contains a specific location type
+var trajectory_has_location_type = cache(function(agentId, locationType, gridworld, initial_state_x, initial_state_y) {
+    return optimal_trajectory(agentId, gridworld, initial_state_x, initial_state_y).indexOf(locationType) !== -1;
+});
+
+// Check if the policy contains a specific motion type
+var policy_has_motion_type = cache(function(agentId, motionType, gridworld, initial_state_x, initial_state_y) {
+    var policyMotions = map(function(action) { return action[0]; }, optimal_policy(agentId, gridworld, initial_state_x, initial_state_y));
+    return policyMotions.indexOf(motionType) !== -1;
+});
+
+// Check if the policy and trajectory contain a specific motion type at a location
+var policy_and_trajectory_has_motion_at_location = cache(function(agentId, motionType, locationType, gridworld, initial_state_x, initial_state_y) {
+    var policyMotions = map(function(action) { return action[0]; }, optimal_policy(agentId, gridworld, initial_state_x, initial_state_y));
+    var trajectory = optimal_trajectory(agentId, gridworld, initial_state_x, initial_state_y);
+    var motionsAtLocations = zip(policyMotions, trajectory);
+    return motionsAtLocations.indexOf([motionType, locationType]) !== -1;
+});
+
+// Get the motion at a location
+var motion_at_location = cache(function(agentId, motionType, locationType, gridworld, initial_state_x, initial_state_y) {
+    var policyMotions = map(function(action) { return action[0]; }, optimal_policy(agentId, gridworld, initial_state_x, initial_state_y));
+    var trajectory = optimal_trajectory(agentId, gridworld, initial_state_x, initial_state_y);
+    var motionsAtLocations = zip(policyMotions, trajectory);
+    return motionsAtLocations;
+});
+
+// Derived predicates
+
+// Generate unique action IDs
+var action_id_gensym = makeGensym('action-');
+
+// Define actions for going to a location
+var is_going_to_actions = cache(function(agentId) {
+    var actionStates = optimal_policy_with_trajectory(agentId, gridworld, initial_x, initial_y);
+    var finalLocation = last(last(actionStates));
+    return [[
+        ['action_id', action_id_gensym()],
+        ['action_subject', agentId],
+        ['action_predicates', [['is_going', ['to', finalLocation]]]],
+        ['action_preposition', 'to'],
+        ['action_location', finalLocation]
+    ]];
+});
+
+// Define actions for going on a route
+var is_going_on_actions = cache(function(agentId) {
+    var actionStates = optimal_policy_with_trajectory(agentId, gridworld, initial_x, initial_y);
+    return foldl(function(actionState, theseActions) {
+        var actionLocation = last(actionState);
+        var actionManner = actionState[0][0];
+        var actionDirection = actionState[0][1];
+        return [[
+            ['action_id', action_id_gensym()],
+            ['action_subject', agentId],
+            ['action_predicates', [['is_going', actionManner, actionDirection, ['on', actionLocation]]]],
+            ['action_preposition', 'on'],
+            ['action_location', actionLocation]
+        ]].concat(theseActions);
+    }, [], actionStates);
+});
+
+// Combine all actions in the scene
+var actions_in_scene = cache(function(agentId) {
+    return is_going_to_actions(agentId).concat(is_going_on_actions(agentId));
+});
+
+// Check if an action has a specific predicate
+var is_action = function(action, actionPredicate) {
+    return action[2].indexOf(actionPredicate) !== -1;
+};
+
+// Check if an entity is the subject of an action
+var is_subject_of_action = function(action, entity) {
+    return action[1] === entity;
+};
+
+// Check if an action has a specific preposition
+var is_preposition_of_action = function(action, preposition) {
+    return action[3] === preposition;
+};
+
+// Check if an action occurs at a specific location
+var is_location_of_action = function(action, location) {
+    return action[4] === location;
+};
+
+// Get the location of an action
+var get_location = function(action) {
+    return action[4];
+};
+
+// Check if any action satisfies a predicate
+var exists_action = function(agentId, predicate) {
+    return actions_in_scene(agentId).some(predicate);
+};
+
+// Get all actions that satisfy a predicate
+var get_actions = function(agentId, predicate) {
+    return actions_in_scene(agentId).filter(predicate);
+};

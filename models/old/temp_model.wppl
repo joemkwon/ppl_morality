@@ -1,0 +1,76 @@
+// Grid definition
+var grid = [
+    ['S', 'S', 'S', 'S', 'S', 'S', 'S', 'S', 'S', 'H'],
+    ['S', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G'],
+    ['S', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G'],
+    ['S', 'G', 'G', 'G', 'G', 'S', 'G', 'G', 'G', 'G'],
+    ['S', 'G', 'G', 'G', 'S', 'S', 'G', 'G', 'G', 'G'],
+    ['S', 'S', 'S', 'S', 'S', 'S', 'S', 'S', 'S', 'C'],
+    ['S', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'S'],
+    ['S', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'S'],
+    ['S', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'S'],
+    ['S', 'S', 'S', 'S', 'S', 'S', 'S', 'S', 'S', 'S']
+];
+
+// Define possible actions and their effects on coordinates
+var actions = {
+    'up': {x: 0, y: -1},
+    'down': {x: 0, y: 1},
+    'left': {x: -1, y: 0},
+    'right': {x: 1, y: 0}
+};
+
+var model = function() {
+    // Number of people to simulate
+    var num_people = gaussian(100, 10);
+
+    // Function to determine goals and utilities
+    var personGoal = mem(function (person) {
+        var goal = flip(0.05) ? "H" : "C";
+        var utility = uniform({a: goal === "H" ? 450 : 50, b: goal === "H" ? 550 : 150});
+        return {goal: goal, utility: utility};
+    });
+
+    // A function to simulate a person's movement towards their goal
+    var simulatePerson = function (person) {
+        // Starting position 
+        var pos = {x: 0, y: 0};
+        var totalUtility = 0;
+        var steps = 0;
+
+        // Retrieve person's goal and utility once per simulation
+        var goalData = personGoal(person);
+        
+        // Simulate until reaching the goal
+        while (grid[pos.y][pos.x] !== goalData.goal) {
+            // Determine movement direction (simplified)
+            var move = flip(0.5) ? {x: 1, y: 0} : {x: 0, y: 1}; // Move right or up
+            pos.x += move.x;
+            pos.y += move.y;
+            pos.x = Math.min(9, pos.x); // Stay within bounds
+            pos.y = Math.max(0, pos.y); // Stay within bounds
+
+            // Cost of moving through terrain
+            if (grid[pos.y][pos.x] === 'G' || grid[pos.y][pos.x] === 'S') {
+                totalUtility -= 1;
+            }
+            steps += 1;
+            if (steps > 100) break; 
+        }
+        
+        // Check if reached the goal
+        if (grid[pos.y][pos.x] === goalData.goal) {
+            totalUtility += goalData.utility;
+        }
+        
+        return totalUtility;
+    };
+
+    // Aggregate utility of all people
+    var totalUtility = sum(mapN(simulatePerson, num_people));
+    
+    return totalUtility;
+};
+
+var posterior = Infer({model: model, method: "MCMC", samples: 100});
+viz(posterior);
