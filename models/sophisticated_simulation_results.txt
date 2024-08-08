@@ -1,0 +1,20 @@
+Max Iterations: 10
+Simulation Results:
+Number of agents: 100
+Starting location of each agent: (0, 0)
+Total Grass Traffic: 0
+Max Grass Capacity: 300
+Grass Dying Cost: 10000
+Total Utility: 6665.2808891086115
+Average Utility per Agent: 66.65280889108611
+Number of Rule-Following Agents: 100
+Rule-Following Total Utility: 795525.6334325644
+Rule-Following Average Utility per Agent: 7955.256334325644
+Number of Rule-Exceptional Agents: 0
+Rule-Exceptional Total Utility: -216305.57769034719
+Rule-Exceptional Average Utility per Agent: 0
+Goal 'hospital': 4 agents, 4 succeeded, Grass Traffic (Sum: 0, Avg: 0.00)
+Goal 'busStop': 44 agents, 44 succeeded, Grass Traffic (Sum: 0, Avg: 0.00)
+Goal 'coffeeShop': 52 agents, 52 succeeded, Grass Traffic (Sum: 0, Avg: 0.00)
+----------------------------------------
+

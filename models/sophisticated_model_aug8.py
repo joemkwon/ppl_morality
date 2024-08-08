@@ -2,14 +2,6 @@ import numpy as np
 from functools import lru_cache
 
 # Define the gridworld map with various locations
-# gridworld = (
-#     ('S', 'S', 'S', 'hospital'),
-#     ('S', 'G', 'G', 'S'),
-#     ('S', 'S', 'S', 'coffeeShop'),
-#     ('S', 'G', 'G', 'S'),
-#     ('S', 'S', 'S', 'busStop')
-# )
-
 gridworld = (
   ('S', 'S', 'S', 'S', 'S', 'S', 'S', 'S', 'S', 'hospital'),
   ('S', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'S'),
@@ -67,6 +59,22 @@ def motion_utility(agent_id, location_type, motion_type):
             return 0
     return 0
 
+def rule_follower_motion_utility(agent_id, location_type, motion_type):
+    if location_type == 'G':
+        if motion_type == 'is_staying':
+            return 0
+        else:
+            return -1000
+    if location_type == 'S':
+        if motion_type == 'is_walking':
+            return -1
+        if motion_type == 'is_walking_diagonal':
+            return -np.sqrt(2)
+        if motion_type == 'is_staying':
+            return 0
+    return 0
+
+
 def location_utility(agent_id, location_type, goal):
     if location_type == goal:
         return goal_utility(agent_id, goal)
@@ -119,33 +127,36 @@ def gridworld_transition(gridworld, current_x, current_y, action):
         next_y = current_y
     return {'location': get_gridworld_at(gridworld, next_x, next_y), 'x': next_x, 'y': next_y}
 
-def utility_function(agent_id, gridworld, state_x, state_y, action, goal):
+def utility_function(agent_id, gridworld, state_x, state_y, action, goal, rule_following=False):
     location_type = get_gridworld_at(gridworld, state_x, state_y)
     state_location_utility = location_utility(agent_id, location_type, goal)
     motion_type = 'is_walking_diagonal' if action in ['north-west', 'north-east', 'south-west', 'south-east'] else 'is_walking'
-    state_motion_utility = motion_utility(agent_id, location_type, motion_type)
+    if rule_following:
+        state_motion_utility = rule_follower_motion_utility(agent_id, location_type, motion_type)
+    else:
+        state_motion_utility = motion_utility(agent_id, location_type, motion_type)
     return state_location_utility + state_motion_utility
 
 @lru_cache(maxsize=None)
-def value_function(agent_id, curr_iteration, state_x, state_y, goal):
+def value_function(agent_id, curr_iteration, state_x, state_y, goal, rule_following=False):
     if curr_iteration == -1:
         return 0
-    prev_optimal_action_value = optimal_action_value(agent_id, curr_iteration - 1, state_x, state_y, goal)
+    prev_optimal_action_value = optimal_action_value(agent_id, curr_iteration - 1, state_x, state_y, goal, rule_following)
     return prev_optimal_action_value['value']
 
 @lru_cache(maxsize=None)
-def available_actions_to_values(agent_id, curr_iteration, state_x, state_y, goal):
+def available_actions_to_values(agent_id, curr_iteration, state_x, state_y, goal, rule_following=False):
     action_values = []
     for action in directions:
-        utility = utility_function(agent_id, gridworld, state_x, state_y, action, goal)
+        utility = utility_function(agent_id, gridworld, state_x, state_y, action, goal, rule_following)
         next_state = gridworld_transition(gridworld, state_x, state_y, action)
-        next_state_value = value_function(agent_id, curr_iteration, next_state['x'], next_state['y'], goal)
+        next_state_value = value_function(agent_id, curr_iteration, next_state['x'], next_state['y'], goal, rule_following)
         action_values.append({'action': action, 'value': utility + next_state_value})
     return action_values
 
 @lru_cache(maxsize=None)
-def optimal_action_value(agent_id, curr_iteration, state_x, state_y, goal):
-    actions_to_values = available_actions_to_values(agent_id, curr_iteration, state_x, state_y, goal)
+def optimal_action_value(agent_id, curr_iteration, state_x, state_y, goal, rule_following=False):
+    actions_to_values = available_actions_to_values(agent_id, curr_iteration, state_x, state_y, goal, rule_following)
     return max(actions_to_values, key=lambda a: a['value'])
 
 @lru_cache(maxsize=None)
@@ -156,36 +167,77 @@ def should_terminate(agent_id, state_x, state_y, goal):
     state_location_utility = location_utility(agent_id, location_type, goal)
     return state_location_utility > 0
 
-def optimal_policy_from_initial_state(agent_id, state_x, state_y, curr_iteration, max_iterations, goal):
+def optimal_policy_from_initial_state(agent_id, state_x, state_y, curr_iteration, max_iterations, goal, rule_following=False):
     if should_terminate(agent_id, state_x, state_y, goal):
         return []
-    curr_optimal_action_value = optimal_action_value(agent_id, curr_iteration, state_x, state_y, goal)
+    curr_optimal_action_value = optimal_action_value(agent_id, curr_iteration, state_x, state_y, goal, rule_following)
     curr_optimal_action = curr_optimal_action_value['action']
     next_state = gridworld_transition(gridworld, state_x, state_y, curr_optimal_action)
-    remaining_policy = optimal_policy_from_initial_state(agent_id, next_state['x'], next_state['y'], curr_iteration + 1, max_iterations, goal)
+    remaining_policy = optimal_policy_from_initial_state(agent_id, next_state['x'], next_state['y'], curr_iteration + 1, max_iterations, goal, rule_following)
     return [curr_optimal_action] + remaining_policy
 
-def trajectory_from_initial_state(agent_id, state_x, state_y, curr_iteration, max_iterations, goal):
+def trajectory_from_initial_state(agent_id, state_x, state_y, curr_iteration, max_iterations, goal, rule_following=False):
     if should_terminate(agent_id, state_x, state_y, goal):
         return []
-    curr_optimal_action_value = optimal_action_value(agent_id, curr_iteration, state_x, state_y, goal)
+    curr_optimal_action_value = optimal_action_value(agent_id, curr_iteration, state_x, state_y, goal, rule_following)
     curr_optimal_action = curr_optimal_action_value['action']
     next_state = gridworld_transition(gridworld, state_x, state_y, curr_optimal_action)
-    remaining_trajectory = trajectory_from_initial_state(agent_id, next_state['x'], next_state['y'], curr_iteration + 1, max_iterations, goal)
+    remaining_trajectory = trajectory_from_initial_state(agent_id, next_state['x'], next_state['y'], curr_iteration + 1, max_iterations, goal, rule_following)
     return [next_state['location']] + remaining_trajectory
 
-def optimal_policy(agent_id, initial_state_x, initial_state_y, max_iterations, goal):
-    return [('start', 'start')] + optimal_policy_from_initial_state(agent_id, initial_state_x, initial_state_y, 0, max_iterations, goal)
+def optimal_policy(agent_id, initial_state_x, initial_state_y, max_iterations, goal, rule_following=False):
+    return [('start', 'start')] + optimal_policy_from_initial_state(agent_id, initial_state_x, initial_state_y, 0, max_iterations, goal, rule_following)
 
-def optimal_trajectory(agent_id, initial_state_x, initial_state_y, max_iterations, goal):
-    return [get_gridworld_at(gridworld, initial_state_x, initial_state_y)] + trajectory_from_initial_state(agent_id, initial_state_x, initial_state_y, 0, max_iterations, goal)
+def optimal_trajectory(agent_id, initial_state_x, initial_state_y, max_iterations, goal, rule_following=False):
+    return [get_gridworld_at(gridworld, initial_state_x, initial_state_y)] + trajectory_from_initial_state(agent_id, initial_state_x, initial_state_y, 0, max_iterations, goal, rule_following)
 
-def optimal_policy_with_trajectory(agent_id, initial_state_x, initial_state_y, max_iterations, goal):
-    policy = optimal_policy(agent_id, initial_state_x, initial_state_y, max_iterations, goal)
-    trajectory = optimal_trajectory(agent_id, initial_state_x, initial_state_y, max_iterations, goal)
+def optimal_policy_with_trajectory(agent_id, initial_state_x, initial_state_y, max_iterations, goal, rule_following=False):
+    policy = optimal_policy(agent_id, initial_state_x, initial_state_y, max_iterations, goal, rule_following)
+    trajectory = optimal_trajectory(agent_id, initial_state_x, initial_state_y, max_iterations, goal, rule_following)
     return list(zip(policy, trajectory))
 
-def simulate():
+def pre_simulation(agent_id, rule_following, max_grass_capacity, grass_dying_cost):
+    total_utility = 0
+    total_grass_traffic = 0
+    
+    num_agents = 100
+    agent_ids = range(num_agents)
+  
+    goal_distribution = ['hospital', 'busStop', 'coffeeShop']
+    goal_probabilities = [0.05, 0.45, 0.5]
+    
+    for agent_id in agent_ids:
+        goal = np.random.choice(goal_distribution, p=goal_probabilities)
+        initial_utility = goal_utility(agent_id, goal)
+        
+        policy_trajectory = optimal_policy_with_trajectory(agent_id, initial_x, initial_y, MAX_ITERATIONS, goal, rule_following)
+        
+        utility = 0
+        agent_grass_traffic = 0
+        
+        for step in policy_trajectory:
+            action = step[0]
+            location = step[1]
+            if location == 'G':
+                total_grass_traffic += 1
+                agent_grass_traffic += 1
+            
+            motion_type = 'is_walking_diagonal' if action in ['north-west', 'north-east', 'south-west', 'south-east'] else 'is_walking'
+            utility += motion_utility(agent_id, location, motion_type)
+        
+        final_location = policy_trajectory[-1][1]
+        if final_location == goal:
+            utility += initial_utility
+        
+        total_utility += utility
+    
+    if total_grass_traffic > max_grass_capacity:
+        total_utility -= grass_dying_cost
+    
+    return total_utility, total_grass_traffic
+
+
+def simulate(initial_x=0, initial_y=0):
     total_grass_traffic = 0
     total_utility = 0
     
@@ -194,6 +246,7 @@ def simulate():
     
     num_agents = 100
     print(f"Number of agents: {num_agents}")
+    print(f"Starting location of each agent: ({initial_x}, {initial_y})")
     agent_ids = range(num_agents)
   
     goal_distribution = ['hospital', 'busStop', 'coffeeShop']
@@ -203,14 +256,35 @@ def simulate():
     success_counters = {goal: 0 for goal in goals}
     grass_traffic_counters = {goal: 0 for goal in goals}
     
+    rule_following_utilities = []
+    rule_exceptional_utilities = []
+    
+    rule_following_agents = 0
+    rule_exceptional_agents = 0
+    
     for agent_id in agent_ids:
+        # Pre-simulations
+        rule_exceptional_utility, _ = pre_simulation(agent_id, rule_following=False, max_grass_capacity=max_grass_capacity, grass_dying_cost=grass_dying_cost)
+        rule_following_utility, _ = pre_simulation(agent_id, rule_following=True, max_grass_capacity=max_grass_capacity, grass_dying_cost=grass_dying_cost)
+        
+        rule_following_utilities.append(rule_following_utility)
+        rule_exceptional_utilities.append(rule_exceptional_utility)
+        
+        # Determine agent type
+        total_utility_sum = rule_following_utility + rule_exceptional_utility
+        rule_following_probability = rule_following_utility / total_utility_sum if total_utility_sum > 0 else 0
+        is_rule_following = np.random.random() < rule_following_probability
+        
+        if is_rule_following:
+            rule_following_agents += 1
+        else:
+            rule_exceptional_agents += 1
+        
         goal = np.random.choice(goal_distribution, p=goal_probabilities)
         goal_counters[goal] += 1
         initial_utility = goal_utility(agent_id, goal)
-
-        print(f"Agent {agent_id}: Goal is {goal} with initial utility {initial_utility}")
         
-        policy_trajectory = optimal_policy_with_trajectory(agent_id, initial_x, initial_y, MAX_ITERATIONS, goal)
+        policy_trajectory = optimal_policy_with_trajectory(agent_id, initial_x, initial_y, MAX_ITERATIONS, goal, is_rule_following)
         
         utility = 0
         agent_grass_traffic = 0
@@ -232,27 +306,41 @@ def simulate():
             success_counters[goal] += 1
         
         total_utility += utility
+        
+        if is_rule_following:
+            rule_following_utilities[-1] += utility
+        else:
+            rule_exceptional_utilities[-1] += utility
+        
         print(f"Agent {agent_id}: Final utility {utility}, final location {final_location}, grass traffic added {agent_grass_traffic}")
 
     if total_grass_traffic > max_grass_capacity:
         total_utility -= grass_dying_cost
         print(f"Grass traffic exceeded max capacity. Applying penalty of {grass_dying_cost} to total utility.")
 
-    with open("simulation_results.txt", "a") as file:
+    with open("sophisticated_simulation_results.txt", "a") as file:
         file.write(f"Max Iterations: {MAX_ITERATIONS}\n")
         file.write("Simulation Results:\n")
         file.write(f"Number of agents: {num_agents}\n")
+        file.write(f"Starting location of each agent: ({initial_x}, {initial_y})\n")
         file.write(f"Total Grass Traffic: {total_grass_traffic}\n")
         file.write(f"Max Grass Capacity: {max_grass_capacity}\n")
         file.write(f"Grass Dying Cost: {grass_dying_cost}\n")
         file.write(f"Total Utility: {total_utility}\n")
+        file.write(f"Average Utility per Agent: {total_utility / num_agents}\n")
+        file.write(f"Number of Rule-Following Agents: {rule_following_agents}\n")
+        file.write(f"Rule-Following Total Utility: {sum(rule_following_utilities)}\n")
+        file.write(f"Rule-Following Average Utility per Agent: {sum(rule_following_utilities) / rule_following_agents if rule_following_agents > 0 else 0}\n")
+        file.write(f"Number of Rule-Exceptional Agents: {rule_exceptional_agents}\n")
+        file.write(f"Rule-Exceptional Total Utility: {sum(rule_exceptional_utilities)}\n")
+        file.write(f"Rule-Exceptional Average Utility per Agent: {sum(rule_exceptional_utilities) / rule_exceptional_agents if rule_exceptional_agents > 0 else 0}\n")
         for goal in goals:
             avg_grass_traffic = grass_traffic_counters[goal] / goal_counters[goal] if goal_counters[goal] > 0 else 0
             file.write(f"Goal '{goal}': {goal_counters[goal]} agents, {success_counters[goal]} succeeded, "
                        f"Grass Traffic (Sum: {grass_traffic_counters[goal]}, Avg: {avg_grass_traffic:.2f})\n")
         file.write("-" * 40 + "\n\n")
 
-    return {'totalGrassTraffic': total_grass_traffic, 'totalUtility': total_utility}
+    return {'totalGrassTraffic': total_grass_traffic, 'totalUtility': total_utility, 'averageUtilityPerAgent': total_utility / num_agents, 'ruleFollowingAgents': rule_following_agents, 'ruleExceptionalAgents': rule_exceptional_agents}
 
 # Simulation parameters
 MAX_ITERATIONS = 10

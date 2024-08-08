@@ -1,30 +1,12 @@
-Max Iterations: 2
-Simulation Results:
-Number of agents: 100
-Total Grass Traffic: 0
-Total Utility: -100
-Goal 'hospital': 2 agents, 0 succeeded, Grass Traffic (Sum: 0, Avg: 0.00)
-Goal 'busStop': 49 agents, 0 succeeded, Grass Traffic (Sum: 0, Avg: 0.00)
-Goal 'coffeeShop': 49 agents, 0 succeeded, Grass Traffic (Sum: 0, Avg: 0.00)
-----------------------------------------
-
 Max Iterations: 10
 Simulation Results:
 Number of agents: 100
-Total Grass Traffic: 490
-Total Utility: 10519.157718388105
-Goal 'hospital': 8 agents, 8 succeeded, Grass Traffic (Sum: 0, Avg: 0.00)
-Goal 'busStop': 38 agents, 38 succeeded, Grass Traffic (Sum: 266, Avg: 7.00)
-Goal 'coffeeShop': 54 agents, 54 succeeded, Grass Traffic (Sum: 224, Avg: 4.15)
-----------------------------------------
-
-Max Iterations: 20
-Simulation Results:
-Number of agents: 100
-Total Grass Traffic: 510
-Total Utility: 8934.519756831512
-Goal 'hospital': 6 agents, 6 succeeded, Grass Traffic (Sum: 0, Avg: 0.00)
-Goal 'busStop': 42 agents, 42 succeeded, Grass Traffic (Sum: 294, Avg: 7.00)
-Goal 'coffeeShop': 52 agents, 52 succeeded, Grass Traffic (Sum: 216, Avg: 4.15)
+Total Grass Traffic: 530
+Max Grass Capacity: 300
+Grass Dying Cost: 10000
+Total Utility: -1474.6601581369014
+Goal 'hospital': 5 agents, 5 succeeded, Grass Traffic (Sum: 0, Avg: 0.00)
+Goal 'busStop': 46 agents, 46 succeeded, Grass Traffic (Sum: 322, Avg: 7.00)
+Goal 'coffeeShop': 49 agents, 49 succeeded, Grass Traffic (Sum: 208, Avg: 4.24)
 ----------------------------------------
 
