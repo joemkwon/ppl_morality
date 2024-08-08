@@ -196,7 +196,7 @@ def optimal_policy_with_trajectory(agent_id, initial_state_x, initial_state_y, m
     trajectory = optimal_trajectory(agent_id, initial_state_x, initial_state_y, max_iterations, goal, rule_following)
     return list(zip(policy, trajectory))
 
-def pre_simulation(agent_id, rule_following, max_grass_capacity, grass_dying_cost):
+def pre_simulation(agent_id, rule_following, max_grass_capacity, grass_dying_cost, main_agent_utility):
     total_utility = 0
     total_grass_traffic = 0
     
@@ -209,6 +209,10 @@ def pre_simulation(agent_id, rule_following, max_grass_capacity, grass_dying_cos
     for agent_id in agent_ids:
         goal = np.random.choice(goal_distribution, p=goal_probabilities)
         initial_utility = goal_utility(agent_id, goal)
+        
+        # Skip agents with utility less than the main agent's utility
+        if initial_utility < main_agent_utility:
+            continue
         
         policy_trajectory = optimal_policy_with_trajectory(agent_id, initial_x, initial_y, MAX_ITERATIONS, goal, rule_following)
         
@@ -236,7 +240,6 @@ def pre_simulation(agent_id, rule_following, max_grass_capacity, grass_dying_cos
     
     return total_utility, total_grass_traffic
 
-
 def simulate(initial_x=0, initial_y=0):
     total_grass_traffic = 0
     total_utility = 0
@@ -263,9 +266,12 @@ def simulate(initial_x=0, initial_y=0):
     rule_exceptional_agents = 0
     
     for agent_id in agent_ids:
-        # Pre-simulations
-        rule_exceptional_utility, _ = pre_simulation(agent_id, rule_following=False, max_grass_capacity=max_grass_capacity, grass_dying_cost=grass_dying_cost)
-        rule_following_utility, _ = pre_simulation(agent_id, rule_following=True, max_grass_capacity=max_grass_capacity, grass_dying_cost=grass_dying_cost)
+        # Pre-simulations for the main agent
+        main_agent_goal = np.random.choice(goal_distribution, p=goal_probabilities)
+        main_agent_utility = goal_utility(agent_id, main_agent_goal)
+        
+        rule_exceptional_utility, _ = pre_simulation(agent_id, rule_following=False, max_grass_capacity=max_grass_capacity, grass_dying_cost=grass_dying_cost, main_agent_utility=main_agent_utility)
+        rule_following_utility, _ = pre_simulation(agent_id, rule_following=True, max_grass_capacity=max_grass_capacity, grass_dying_cost=grass_dying_cost, main_agent_utility=main_agent_utility)
         
         rule_following_utilities.append(rule_following_utility)
         rule_exceptional_utilities.append(rule_exceptional_utility)
