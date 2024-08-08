@@ -1,20 +1,14 @@
 import numpy as np
-import random
-from scipy.stats import norm
+from functools import lru_cache
 
 # Define the gridworld map with various locations
-gridworld = [
-    ['S', 'S', 'S', 'S', 'S', 'S', 'S', 'S', 'S', 'hospital'],
-    ['S', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'S'],
-    ['S', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'S'],
-    ['S', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'S'],
-    ['S', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'S'],
-    ['S', 'S', 'S', 'S', 'S', 'S', 'S', 'S', 'S', 'coffeeShop'],
-    ['S', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'S'],
-    ['S', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'S'],
-    ['S', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'S'],
-    ['S', 'S', 'S', 'S', 'S', 'S', 'S', 'S', 'S', 'busStop']
-]
+gridworld = (
+    ('S', 'S', 'S', 'hospital'),
+    ('S', 'G', 'G', 'S'),
+    ('S', 'S', 'S', 'coffeeShop'),
+    ('S', 'G', 'G', 'S'),
+    ('S', 'S', 'S', 'busStop')
+)
 
 # Define the list of goals in the gridworld
 goals = ['hospital', 'busStop', 'coffeeShop']
@@ -60,11 +54,11 @@ def motion_utility(agent_id, location_type, motion_type):
             return 0
     return 0
 
-def location_utility(agent_id, location_type):
-    if location_type in ['G', 'S']:
-        return 0
+def location_utility(agent_id, location_type, goal):
+    if location_type == goal:
+        return goal_utility(agent_id, goal)
     else:
-        return goal_utility(agent_id, location_type)
+        return 0
 
 def get_gridworld_at(gridworld, x, y):
     return gridworld[y][x]
@@ -112,152 +106,78 @@ def gridworld_transition(gridworld, current_x, current_y, action):
         next_y = current_y
     return {'location': get_gridworld_at(gridworld, next_x, next_y), 'x': next_x, 'y': next_y}
 
-def utility_function(agent_id, gridworld, state_x, state_y, action):
+def utility_function(agent_id, gridworld, state_x, state_y, action, goal):
     location_type = get_gridworld_at(gridworld, state_x, state_y)
-    state_location_utility = location_utility(agent_id, location_type)
+    state_location_utility = location_utility(agent_id, location_type, goal)
     motion_type = 'is_walking_diagonal' if action in ['north-west', 'north-east', 'south-west', 'south-east'] else 'is_walking'
     state_motion_utility = motion_utility(agent_id, location_type, motion_type)
     return state_location_utility + state_motion_utility
 
-def value_function(agent_id, curr_iteration, gridworld, state_x, state_y, max_iterations):
+@lru_cache(maxsize=None)
+def value_function(agent_id, curr_iteration, state_x, state_y, goal):
     if curr_iteration == -1:
         return 0
-    prev_optimal_action_value = optimal_action_value(agent_id, curr_iteration - 1, gridworld, state_x, state_y, max_iterations)
+    prev_optimal_action_value = optimal_action_value(agent_id, curr_iteration - 1, state_x, state_y, goal)
     return prev_optimal_action_value['value']
 
-def available_actions_to_values(agent_id, curr_iteration, gridworld, state_x, state_y, max_iterations):
-    return [{'action': action, 'value': utility_function(agent_id, gridworld, state_x, state_y, action) + value_function(agent_id, curr_iteration, gridworld, gridworld_transition(gridworld, state_x, state_y, action)['x'], gridworld_transition(gridworld, state_x, state_y, action)['y'], max_iterations)} for action in directions]
+@lru_cache(maxsize=None)
+def available_actions_to_values(agent_id, curr_iteration, state_x, state_y, goal):
+    action_values = []
+    for action in directions:
+        utility = utility_function(agent_id, gridworld, state_x, state_y, action, goal)
+        next_state = gridworld_transition(gridworld, state_x, state_y, action)
+        next_state_value = value_function(agent_id, curr_iteration, next_state['x'], next_state['y'], goal)
+        action_values.append({'action': action, 'value': utility + next_state_value})
+    return action_values
 
-def optimal_action_value(agent_id, curr_iteration, gridworld, state_x, state_y, max_iterations):
-    actions_to_values = available_actions_to_values(agent_id, curr_iteration, gridworld, state_x, state_y, max_iterations)
+@lru_cache(maxsize=None)
+def optimal_action_value(agent_id, curr_iteration, state_x, state_y, goal):
+    actions_to_values = available_actions_to_values(agent_id, curr_iteration, state_x, state_y, goal)
     return max(actions_to_values, key=lambda a: a['value'])
 
-def should_terminate(agent_id, gridworld, state_x, state_y, initial_x, initial_y, max_iterations):
-    if value_function(agent_id, max_iterations, gridworld, initial_x, initial_y, max_iterations) <= 0:
+@lru_cache(maxsize=None)
+def should_terminate(agent_id, state_x, state_y, goal):
+    if value_function(agent_id, MAX_ITERATIONS, initial_x, initial_y, goal) <= 0:
         return True
     location_type = get_gridworld_at(gridworld, state_x, state_y)
-    state_location_utility = location_utility(agent_id, location_type)
+    state_location_utility = location_utility(agent_id, location_type, goal)
     return state_location_utility > 0
 
-def optimal_policy_from_initial_state(agent_id, gridworld, state_x, state_y, max_iterations):
-    if should_terminate(agent_id, gridworld, state_x, state_y, state_x, state_y, max_iterations):
+def optimal_policy_from_initial_state(agent_id, state_x, state_y, curr_iteration, max_iterations, goal):
+    if should_terminate(agent_id, state_x, state_y, goal):
         return []
-    curr_optimal_action_value = optimal_action_value(agent_id, max_iterations, gridworld, state_x, state_y, max_iterations)
+    curr_optimal_action_value = optimal_action_value(agent_id, curr_iteration, state_x, state_y, goal)
     curr_optimal_action = curr_optimal_action_value['action']
     next_state = gridworld_transition(gridworld, state_x, state_y, curr_optimal_action)
-    remaining_policy = optimal_policy_from_initial_state(agent_id, gridworld, next_state['x'], next_state['y'], max_iterations)
+    remaining_policy = optimal_policy_from_initial_state(agent_id, next_state['x'], next_state['y'], curr_iteration + 1, max_iterations, goal)
     return [curr_optimal_action] + remaining_policy
 
-def trajectory_from_initial_state(agent_id, gridworld, state_x, state_y, max_iterations):
-    if should_terminate(agent_id, gridworld, state_x, state_y, state_x, state_y, max_iterations):
+def trajectory_from_initial_state(agent_id, state_x, state_y, curr_iteration, max_iterations, goal):
+    if should_terminate(agent_id, state_x, state_y, goal):
         return []
-    curr_optimal_action_value = optimal_action_value(agent_id, max_iterations, gridworld, state_x, state_y, max_iterations)
+    curr_optimal_action_value = optimal_action_value(agent_id, curr_iteration, state_x, state_y, goal)
     curr_optimal_action = curr_optimal_action_value['action']
     next_state = gridworld_transition(gridworld, state_x, state_y, curr_optimal_action)
-    remaining_trajectory = trajectory_from_initial_state(agent_id, gridworld, next_state['x'], next_state['y'], max_iterations)
+    remaining_trajectory = trajectory_from_initial_state(agent_id, next_state['x'], next_state['y'], curr_iteration + 1, max_iterations, goal)
     return [next_state['location']] + remaining_trajectory
 
-def optimal_policy(agent_id, gridworld, initial_state_x, initial_state_y, max_iterations):
-    return [['start', 'start']] + optimal_policy_from_initial_state(agent_id, gridworld, initial_state_x, initial_state_y, max_iterations)
+def optimal_policy(agent_id, initial_state_x, initial_state_y, max_iterations, goal):
+    return [('start', 'start')] + optimal_policy_from_initial_state(agent_id, initial_state_x, initial_state_y, 0, max_iterations, goal)
 
-def optimal_trajectory(agent_id, gridworld, initial_state_x, initial_state_y, max_iterations):
-    return [get_gridworld_at(gridworld, initial_state_x, initial_state_y)] + trajectory_from_initial_state(agent_id, gridworld, initial_state_x, initial_state_y, max_iterations)
+def optimal_trajectory(agent_id, initial_state_x, initial_state_y, max_iterations, goal):
+    return [get_gridworld_at(gridworld, initial_state_x, initial_state_y)] + trajectory_from_initial_state(agent_id, initial_state_x, initial_state_y, 0, max_iterations, goal)
 
-def optimal_policy_with_trajectory(agent_id, gridworld, initial_state_x, initial_state_y, max_iterations):
-    policy = optimal_policy(agent_id, gridworld, initial_state_x, initial_state_y, max_iterations)
-    trajectory = optimal_trajectory(agent_id, gridworld, initial_state_x, initial_state_y, max_iterations)
+def optimal_policy_with_trajectory(agent_id, initial_state_x, initial_state_y, max_iterations, goal):
+    policy = optimal_policy(agent_id, initial_state_x, initial_state_y, max_iterations, goal)
+    trajectory = optimal_trajectory(agent_id, initial_state_x, initial_state_y, max_iterations, goal)
     return list(zip(policy, trajectory))
-
-def get_terminal_goal_state(agent_id, gridworld, initial_state_x, initial_state_y, max_iterations):
-    return optimal_trajectory(agent_id, gridworld, initial_state_x, initial_state_y, max_iterations)[-1]
-
-def trajectory_has_location_type(agent_id, location_type, gridworld, initial_state_x, initial_state_y, max_iterations):
-    return location_type in optimal_trajectory(agent_id, gridworld, initial_state_x, initial_state_y, max_iterations)
-
-def policy_has_motion_type(agent_id, motion_type, gridworld, initial_state_x, initial_state_y, max_iterations):
-    policy_motions = [action[0] for action in optimal_policy(agent_id, gridworld, initial_state_x, initial_state_y, max_iterations)]
-    return motion_type in policy_motions
-
-def policy_and_trajectory_has_motion_at_location(agent_id, motion_type, location_type, gridworld, initial_state_x, initial_state_y, max_iterations):
-    policy_motions = [action[0] for action in optimal_policy(agent_id, gridworld, initial_state_x, initial_state_y, max_iterations)]
-    trajectory = optimal_trajectory(agent_id, gridworld, initial_state_x, initial_state_y, max_iterations)
-    motions_at_locations = list(zip(policy_motions, trajectory))
-    return (motion_type, location_type) in motions_at_locations
-
-def motion_at_location(agent_id, motion_type, location_type, gridworld, initial_state_x, initial_state_y, max_iterations):
-    policy_motions = [action[0] for action in optimal_policy(agent_id, gridworld, initial_state_x, initial_state_y, max_iterations)]
-    trajectory = optimal_trajectory(agent_id, gridworld, initial_state_x, initial_state_y, max_iterations)
-    return list(zip(policy_motions, trajectory))
-
-# Derived predicates and action definition
-def gensym(prefix):
-    counter = 0
-    def generate():
-        nonlocal counter
-        counter += 1
-        return f"{prefix}{counter}"
-    return generate
-
-action_id_gensym = gensym("action-")
-
-def is_going_to_actions(agent_id, gridworld, initial_x, initial_y, max_iterations):
-    action_states = optimal_policy_with_trajectory(agent_id, gridworld, initial_x, initial_y, max_iterations)
-    final_location = action_states[-1][1]
-    return [[
-        ['action_id', action_id_gensym()],
-        ['action_subject', agent_id],
-        ['action_predicates', ['is_going', ['to', final_location]]],
-        ['action_preposition', 'to'],
-        ['action_location', final_location]
-    ]]
-
-def is_going_on_actions(agent_id, gridworld, initial_x, initial_y, max_iterations):
-    action_states = optimal_policy_with_trajectory(agent_id, gridworld, initial_x, initial_y, max_iterations)
-    return [
-        [
-            ['action_id', action_id_gensym()],
-            ['action_subject', agent_id],
-            ['action_predicates', ['is_going', action_state[0][0], action_state[0][1], ['on', action_state[1]]]],
-            ['action_preposition', 'on'],
-            ['action_location', action_state[1]]
-        ]
-        for action_state in action_states
-    ]
-
-def actions_in_scene(agent_id, gridworld, initial_x, initial_y, max_iterations):
-    return is_going_to_actions(agent_id, gridworld, initial_x, initial_y, max_iterations) + is_going_on_actions(agent_id, gridworld, initial_x, initial_y, max_iterations)
-
-def is_action(action, action_predicate):
-    return action_predicate in action['action_predicates']
-
-def is_subject_of_action(action, entity):
-    return action['action_subject'] == entity
-
-def is_preposition_of_action(action, preposition):
-    return action['action_preposition'] == preposition
-
-def is_location_of_action(action, location):
-    return action['action_location'] == location
-
-def get_location(action):
-    return action['action_location']
-
-def exists_action(agent_id, predicate, gridworld, initial_x, initial_y, max_iterations):
-    return any(predicate(action) for action in actions_in_scene(agent_id, gridworld, initial_x, initial_y, max_iterations))
-
-def get_actions(agent_id, predicate, gridworld, initial_x, initial_y, max_iterations):
-    return [action for action in actions_in_scene(agent_id, gridworld, initial_x, initial_y, max_iterations) if predicate(action)]
-
-# Simulation parameters
-MAX_ITERATIONS = 100
-initial_x = 0
-initial_y = gridworld_max_y(gridworld) - 1
 
 def simulate():
     total_grass_traffic = 0
     total_utility = 0
     
-    num_agents = int(np.random.normal(200, 25))
+    num_agents = 5
+    print(f"Number of agents: {num_agents}")
     agent_ids = range(num_agents)
   
     goal_distribution = ['hospital', 'busStop', 'coffeeShop']
@@ -266,16 +186,20 @@ def simulate():
     for agent_id in agent_ids:
         goal = np.random.choice(goal_distribution, p=goal_probabilities)
         initial_utility = goal_utility(agent_id, goal)
+
+        print(f"Agent {agent_id}: Goal is {goal} with initial utility {initial_utility}")
         
-        policy_trajectory = optimal_policy_with_trajectory(agent_id, gridworld, initial_x, initial_y, MAX_ITERATIONS)
+        policy_trajectory = optimal_policy_with_trajectory(agent_id, initial_x, initial_y, MAX_ITERATIONS, goal)
         
         utility = 0
+        agent_grass_traffic = 0
         
         for step in policy_trajectory:
             action = step[0]
             location = step[1]
             if location == 'G':
                 total_grass_traffic += 1
+                agent_grass_traffic += 1
             
             motion_type = 'is_walking_diagonal' if action in ['north-west', 'north-east', 'south-west', 'south-east'] else 'is_walking'
             utility += motion_utility(agent_id, location, motion_type)
@@ -285,9 +209,15 @@ def simulate():
             utility += initial_utility
         
         total_utility += utility
-    
+        print(f"Agent {agent_id}: Final utility {utility}, final location {final_location}, grass traffic added {agent_grass_traffic}")
+
     return {'totalGrassTraffic': total_grass_traffic, 'totalUtility': total_utility}
+
+# Simulation parameters
+MAX_ITERATIONS = 30
+initial_x = 0
+initial_y = 0
 
 # Run the simulation
 simulation_result = simulate()
-print(simulation_result)
+print("Simulation result:", simulation_result)
