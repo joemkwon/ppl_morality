@@ -2,12 +2,25 @@ import numpy as np
 from functools import lru_cache
 
 # Define the gridworld map with various locations
+# gridworld = (
+#     ('S', 'S', 'S', 'hospital'),
+#     ('S', 'G', 'G', 'S'),
+#     ('S', 'S', 'S', 'coffeeShop'),
+#     ('S', 'G', 'G', 'S'),
+#     ('S', 'S', 'S', 'busStop')
+# )
+
 gridworld = (
-    ('S', 'S', 'S', 'hospital'),
-    ('S', 'G', 'G', 'S'),
-    ('S', 'S', 'S', 'coffeeShop'),
-    ('S', 'G', 'G', 'S'),
-    ('S', 'S', 'S', 'busStop')
+  ('S', 'S', 'S', 'S', 'S', 'S', 'S', 'S', 'S', 'hospital'),
+  ('S', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'S'),
+  ('S', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'S'),
+  ('S', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'S'),
+  ('S', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'S'),
+  ('S', 'S', 'S', 'S', 'S', 'S', 'S', 'S', 'S', 'coffeeShop'),
+  ('S', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'S'),
+  ('S', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'S'),
+  ('S', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'G', 'S'),
+  ('S', 'S', 'S', 'S', 'S', 'S', 'S', 'S', 'S', 'busStop')
 )
 
 # Define the list of goals in the gridworld
@@ -176,15 +189,20 @@ def simulate():
     total_grass_traffic = 0
     total_utility = 0
     
-    num_agents = 5
+    num_agents = 100
     print(f"Number of agents: {num_agents}")
     agent_ids = range(num_agents)
   
     goal_distribution = ['hospital', 'busStop', 'coffeeShop']
     goal_probabilities = [0.05, 0.45, 0.5]
+
+    goal_counters = {goal: 0 for goal in goals}
+    success_counters = {goal: 0 for goal in goals}
+    grass_traffic_counters = {goal: 0 for goal in goals}
     
     for agent_id in agent_ids:
         goal = np.random.choice(goal_distribution, p=goal_probabilities)
+        goal_counters[goal] += 1
         initial_utility = goal_utility(agent_id, goal)
 
         print(f"Agent {agent_id}: Goal is {goal} with initial utility {initial_utility}")
@@ -200,6 +218,7 @@ def simulate():
             if location == 'G':
                 total_grass_traffic += 1
                 agent_grass_traffic += 1
+                grass_traffic_counters[goal] += 1
             
             motion_type = 'is_walking_diagonal' if action in ['north-west', 'north-east', 'south-west', 'south-east'] else 'is_walking'
             utility += motion_utility(agent_id, location, motion_type)
@@ -207,14 +226,28 @@ def simulate():
         final_location = policy_trajectory[-1][1]
         if final_location == goal:
             utility += initial_utility
+            success_counters[goal] += 1
         
         total_utility += utility
         print(f"Agent {agent_id}: Final utility {utility}, final location {final_location}, grass traffic added {agent_grass_traffic}")
 
+    with open("simulation_results.txt", "a") as file:
+        file.write(f"Max Iterations: {MAX_ITERATIONS}\n")
+        file.write("Simulation Results:\n")
+        file.write(f"Number of agents: {num_agents}\n")
+        file.write(f"Total Grass Traffic: {total_grass_traffic}\n")
+        file.write(f"Total Utility: {total_utility}\n")
+        for goal in goals:
+            avg_grass_traffic = grass_traffic_counters[goal] / goal_counters[goal] if goal_counters[goal] > 0 else 0
+            file.write(f"Goal '{goal}': {goal_counters[goal]} agents, {success_counters[goal]} succeeded, "
+                       f"Grass Traffic (Sum: {grass_traffic_counters[goal]}, Avg: {avg_grass_traffic:.2f})\n")
+        file.write("-" * 40 + "\n\n")
+
     return {'totalGrassTraffic': total_grass_traffic, 'totalUtility': total_utility}
 
+
 # Simulation parameters
-MAX_ITERATIONS = 30
+MAX_ITERATIONS = 10
 initial_x = 0
 initial_y = 0
 
