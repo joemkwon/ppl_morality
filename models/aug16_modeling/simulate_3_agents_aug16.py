@@ -142,6 +142,7 @@ def gridworld_transition(gridworld, current_x, current_y, action):
         next_y = current_y
     return {'location': get_gridworld_at(gridworld, next_x, next_y), 'x': next_x, 'y': next_y}
 
+
 def utility_function(gridworld, state_x, state_y, action, goal_x, goal_y, rule_following=False):
     location_type = get_gridworld_at(gridworld, state_x, state_y)
     state_location_utility = location_utility(state_x, state_y, goal_x, goal_y)
@@ -156,18 +157,35 @@ def utility_function(gridworld, state_x, state_y, action, goal_x, goal_y, rule_f
 @lru_cache(maxsize=None)
 def value_function(curr_iteration, state_x, state_y, goal_x, goal_y, max_iterations, initial_x, initial_y, rule_following=False):
     if curr_iteration == -1:
-        return 0
+        # Initialize with Manhattan distance to the goal as a heuristic
+        return -abs(state_x - goal_x) - abs(state_y - goal_y)
     prev_optimal_action_value = optimal_action_value(curr_iteration - 1, state_x, state_y, goal_x, goal_y, max_iterations, initial_x, initial_y, rule_following)
     return prev_optimal_action_value['value']
+
+
+# def value_function(curr_iteration, state_x, state_y, goal_x, goal_y, max_iterations, initial_x, initial_y, rule_following=False):
+#     if curr_iteration == -1:
+#         return 0
+#     prev_optimal_action_value = optimal_action_value(curr_iteration - 1, state_x, state_y, goal_x, goal_y, max_iterations, initial_x, initial_y, rule_following)
+#     return prev_optimal_action_value['value']
 
 @lru_cache(maxsize=None)
 def available_actions_to_values(curr_iteration, state_x, state_y, goal_x, goal_y, max_iterations, initial_x, initial_y, rule_following=False):
     action_values = []
     for action in directions:
+        # Calculate the potential new state based on the action
+        next_x = state_x + x_increment(action)
+        next_y = state_y + y_increment(action)
+        
+        # Check if the next position is out of bounds
+        if next_x < 0 or next_x >= gridworld_max_x(gridworld) or next_y < 0 or next_y >= gridworld_max_y(gridworld):
+            continue  # Skip this action as it's invalid
+        
         utility = utility_function(gridworld, state_x, state_y, action, goal_x, goal_y, rule_following)
         next_state = gridworld_transition(gridworld, state_x, state_y, action)
         next_state_value = value_function(curr_iteration, next_state['x'], next_state['y'], goal_x, goal_y, max_iterations, initial_x, initial_y, rule_following)
         action_values.append({'action': action, 'value': utility + next_state_value})
+    
     return action_values
 
 @lru_cache(maxsize=None)
@@ -599,7 +617,7 @@ if __name__ == "__main__":
         initial_y=0,
         goal_x=9,
         goal_y=9,
-        MAX_ITERATIONS=10,
+        MAX_ITERATIONS=50,
         num_agents=100,
         max_grass_capacity=300,
         grass_dying_cost=10000,
