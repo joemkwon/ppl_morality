@@ -1,0 +1,33 @@
+Random Seed: 42
+Simulation Results for Agent Type: main
+Total Grass Traffic: 184
+Max Grass Capacity: 300
+Grass Dying Cost: 10000
+Total Utility: 8504.305353631436
+Average Utility per Agent: 85.04305353631436
+Number of Rule-Following Agents: 77
+Number of Rule-Exceptional Agents: 23
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Random Seed: 42
+Simulation Results for Agent Type: rule-following
+Total Grass Traffic: 0
+Max Grass Capacity: 300
+Grass Dying Cost: 10000
+Total Utility: 8096.153482605906
+Average Utility per Agent: 80.96153482605907
+Number of Rule-Following Agents: 100
+Number of Rule-Exceptional Agents: 0
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Random Seed: 42
+Simulation Results for Agent Type: rule-exceptional
+Total Grass Traffic: 800
+Max Grass Capacity: 300
+Grass Dying Cost: 10000
+Total Utility: -1203.8465173940913
+Average Utility per Agent: -12.038465173940914
+Number of Rule-Following Agents: 0
+Number of Rule-Exceptional Agents: 100
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
