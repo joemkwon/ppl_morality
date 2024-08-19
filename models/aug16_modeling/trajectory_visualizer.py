@@ -12,7 +12,7 @@ def draw_grid(ax, grid):
 
     for i in range(n):
         for j in range(m):
-            rect = plt.Rectangle((j, n - i - 1), 1, 1, facecolor=colors.get(grid[i][j], 'white'))
+            rect = plt.Rectangle((j, i), 1, 1, facecolor=colors.get(grid[i][j], 'white'))
             ax.add_patch(rect)
 
     ax.set_xlim(0, m)
@@ -43,66 +43,52 @@ def plot_trajectories(jsonl_file, output_folder='visualizations'):
         agents = data['agents']
         simulation_parameters = data['simulation_parameters']
         
-        # Print the initial coordinates
-        print(f"Initial X: {simulation_parameters['initial_x']}, Initial Y: {simulation_parameters['initial_y']}")
-        
         # Create a new plot for each line of data
         fig, ax = plt.subplots(figsize=(10, 10))
         draw_grid(ax, gridworld)
 
-        # Plot the initial position only for debugging
-        ax.plot(simulation_parameters['initial_x'] + 0.5, len(gridworld) - simulation_parameters['initial_y'] - 1 + 0.5, 'ro', markersize=10, label='Initial Position')
+        # Invert the y-axis to make (0,0) at the top-left corner
+        ax.invert_yaxis()
+
+        # Plot the initial position
+        ax.plot(simulation_parameters['initial_x'] + 0.5, simulation_parameters['initial_y'] + 0.5, 'ro', markersize=10, label='Initial Position')
         
         # Plot each agent's trajectory
         for agent in agents:
-            # Extract the trajectory as a list of location types
-            trajectory = [t[1] for t in agent['policy_trajectory']]
-            print(f"Agent {agent['agent_id']} Trajectory: {trajectory}")
-            print(f"Agent {agent['agent_id']} Actions: {[t[0] for t in agent['policy_trajectory']]}")
-            
-            # Initialize with starting position
-            x_coords = [simulation_parameters['initial_x']]
-            y_coords = [simulation_parameters['initial_y']]
+            # Initialize with starting position (with a 0.5 offset to center the lines)
+            x_coords = [simulation_parameters['initial_x'] + 0.5]
+            y_coords = [simulation_parameters['initial_y'] + 0.5]
 
             # Iterate through trajectory actions and simulate movements
             for step in agent['policy_trajectory'][1:]:
                 action = step[0]
-
+                
                 # Update x, y coordinates based on the action
                 if action == 'west':
                     x_coords.append(x_coords[-1] - 1)
+                    y_coords.append(y_coords[-1])
                 elif action == 'east':
                     x_coords.append(x_coords[-1] + 1)
+                    y_coords.append(y_coords[-1])
                 elif action == 'north':
-                    y_coords.append(y_coords[-1] + 1)
-                elif action == 'south':
+                    x_coords.append(x_coords[-1])
                     y_coords.append(y_coords[-1] - 1)
+                elif action == 'south':
+                    x_coords.append(x_coords[-1])
+                    y_coords.append(y_coords[-1] + 1)
                 elif action == 'north-west':
                     x_coords.append(x_coords[-1] - 1)
-                    y_coords.append(y_coords[-1] + 1)
+                    y_coords.append(y_coords[-1] - 1)
                 elif action == 'north-east':
                     x_coords.append(x_coords[-1] + 1)
-                    y_coords.append(y_coords[-1] + 1)
+                    y_coords.append(y_coords[-1] - 1)
                 elif action == 'south-west':
                     x_coords.append(x_coords[-1] - 1)
-                    y_coords.append(y_coords[-1] - 1)
+                    y_coords.append(y_coords[-1] + 1)
                 elif action == 'south-east':
                     x_coords.append(x_coords[-1] + 1)
-                    y_coords.append(y_coords[-1] - 1)
+                    y_coords.append(y_coords[-1] + 1)
 
-                # Ensure we maintain the same number of x and y points
-                if len(x_coords) > len(y_coords):
-                    y_coords.append(y_coords[-1])
-                elif len(y_coords) > len(x_coords):
-                    x_coords.append(x_coords[-1])
-
-            # Adjust y-coordinates for grid orientation
-            y_coords = [len(gridworld) - y - 1 for y in y_coords]
-
-            # Debugging: Print first few coordinates for verification
-            print(f"Agent {agent['agent_id']} x_coords: {x_coords[:5]}")
-            print(f"Agent {agent['agent_id']} y_coords: {y_coords[:5]}")
-            
             # Color grading along the trajectory
             num_steps = len(x_coords)
             colors = [cmap(i / num_steps) for i in range(num_steps)]
@@ -111,15 +97,16 @@ def plot_trajectories(jsonl_file, output_folder='visualizations'):
             for i in range(num_steps - 1):
                 ax.plot(x_coords[i:i+2], y_coords[i:i+2], color=colors[i], linewidth=2, alpha=0.7)
 
-        # Add simulation parameters as text outside the grid
+        # Add a shorter title
+        ax.set_title("Agent Trajectories", fontsize=14)
+
+        # Display simulation parameters below the grid as a text box
         param_text = '\n'.join([f"{k}: {v}" for k, v in simulation_parameters.items()])
-        
-        # Move text below the grid
-        plt.text(0.5, -0.1, param_text, transform=ax.transAxes, fontsize=10, verticalalignment='top', horizontalalignment='center', bbox=dict(facecolor='white', alpha=0.5))
+        plt.figtext(0.5, -0.05, param_text, wrap=True, horizontalalignment='center', fontsize=10, bbox=dict(facecolor='white', alpha=0.5))
 
         # Save each visualization separately
         output_file = os.path.join(output_folder, f'trajectories_visualization_{line_idx + 1}.png')
-        plt.savefig(output_file)
+        plt.savefig(output_file, bbox_inches='tight')
         plt.close()
 
 if __name__ == "__main__":
