@@ -1,0 +1,40 @@
+Random Seed: 42
+Max Iterations: 50
+Number of agents: 100
+Starting location of each agent: (0, 0)
+Goal location: (9, 9)
+Simulation Results:
+Agent Type: main
+Total Grass Traffic: 234
+Max Grass Capacity: 300
+Grass Dying Cost: 10000
+Total Utility: 8413.021210053887
+Average Utility per Agent: 84.13021210053887
+Number of Rule-Following Agents: 74
+Number of Rule-Exceptional Agents: 26
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Simulation Results:
+Agent Type: rule-following
+Total Grass Traffic: 0
+Max Grass Capacity: 300
+Grass Dying Cost: 10000
+Total Utility: 8378.728277762182
+Average Utility per Agent: 83.78728277762183
+Number of Rule-Following Agents: 100
+Number of Rule-Exceptional Agents: 0
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Simulation Results:
+Agent Type: rule-exceptional
+Total Grass Traffic: 900
+Max Grass Capacity: 300
+Grass Dying Cost: 10000
+Total Utility: -1394.9618674932426
+Average Utility per Agent: -13.949618674932426
+Number of Rule-Following Agents: 0
+Number of Rule-Exceptional Agents: 100
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+----------------------------------------
+
