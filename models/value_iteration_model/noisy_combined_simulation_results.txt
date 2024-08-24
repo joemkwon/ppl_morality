@@ -5,13 +5,13 @@ Starting location of each agent: (0, 0)
 Goal location: (9, 9)
 Simulation Results:
 Agent Type: main
-Total Grass Traffic: 234
+Total Grass Traffic: 146
 Max Grass Capacity: 300
 Grass Dying Cost: 10000
-Total Utility: 8413.021210053887
-Average Utility per Agent: 84.13021210053887
-Number of Rule-Following Agents: 74
-Number of Rule-Exceptional Agents: 26
+Total Utility: 7906.073944893904
+Average Utility per Agent: 79.06073944893905
+Number of Rule-Following Agents: 84
+Number of Rule-Exceptional Agents: 16
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Simulation Results:
@@ -19,19 +19,19 @@ Agent Type: rule-following
 Total Grass Traffic: 0
 Max Grass Capacity: 300
 Grass Dying Cost: 10000
-Total Utility: 8378.728277762182
-Average Utility per Agent: 83.78728277762183
+Total Utility: 7778.738464754379
+Average Utility per Agent: 77.78738464754379
 Number of Rule-Following Agents: 100
 Number of Rule-Exceptional Agents: 0
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Simulation Results:
 Agent Type: rule-exceptional
-Total Grass Traffic: 900
+Total Grass Traffic: 933
 Max Grass Capacity: 300
 Grass Dying Cost: 10000
-Total Utility: -1394.9618674932426
-Average Utility per Agent: -13.949618674932426
+Total Utility: -1489.462122268762
+Average Utility per Agent: -14.89462122268762
 Number of Rule-Following Agents: 0
 Number of Rule-Exceptional Agents: 100
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -322,6 +322,12 @@ def simulate(
     rule_exceptional_agents = 0
 
     for agent_id in agent_ids:
+        # Clear the cache for each agent
+        value_function.cache_clear()
+        available_actions_to_values.cache_clear()
+        optimal_action_value.cache_clear()
+        should_terminate.cache_clear()
+
         main_agent_utility = goal_utility()
 
         if agent_type == "rule-following":
@@ -451,6 +457,12 @@ def run_simulation_for_all_agents(
         agents_data = []  
 
         for agent_id in range(num_agents):
+            # Clear the cache for each agent
+            value_function.cache_clear()
+            available_actions_to_values.cache_clear()
+            optimal_action_value.cache_clear()
+            should_terminate.cache_clear()
+
             main_agent_utility = goal_utility()
 
             if agent_type == "rule-following":
