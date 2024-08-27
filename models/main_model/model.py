@@ -28,9 +28,12 @@ def get_grass_fragility_parameter(community_id):
     return grass_fragility_parameters[community_id]
 
 def score_plan(gridworld, trajectory, goal_utility, myopia_parameter):
-    short_term_plan_u = short_term_plan_utility(trajectory, goal_utility)
-    grass_shortcutiness = len(trajectory) / len(full_rule_following_trajectory(gridworld, trajectory[0], trajectory[-1]))
-    universalized_cost_for_grass_damage = universalized_plan_utility(gridworld, trajectory, goal_utility, grass_shortcutiness)
+    # Extract coordinates from the trajectory
+    coordinates = [step['coordinate'] for step in trajectory]
+    
+    short_term_plan_u = short_term_plan_utility(coordinates, goal_utility)
+    grass_shortcutiness = len(coordinates) / len(full_rule_following_trajectory(gridworld, coordinates[0], coordinates[-1]))
+    universalized_cost_for_grass_damage = universalized_plan_utility(gridworld, coordinates, goal_utility, grass_shortcutiness)
     overall_trajectory_utility = short_term_plan_u + myopia_parameter * universalized_cost_for_grass_damage
     return overall_trajectory_utility
 
