@@ -1,0 +1,136 @@
+{
+    "instructions": [
+      {
+        "preamble": "(Instructions 1 out of 4) We are conducting an experiment to gather information about how people reason about rules that are posted in the world. In this experiment, you will be looking at maps which depict a park in a medium-sized town. The maps show the location of grass and sidewalks around the park. Every day, about 100 people go through this area on their way to various destinations.",
+        "question": "What does the map that you will see represent?"
+      },
+      {
+        "preamble": "(Instructions 2 out of 4) Here is an example of a map you may see in the experiment. Green squares represent grass, grey squares represent sidewalks, and a gold star inside a square represents a destination that someone might have.",
+        "question": "What does the star in the map represent?"
+      },
+      {
+        "preamble": "(Instructions 3 out of 4) In each park, there will be a clearly marked sign that everyone can read, which says, \"Keep off the grass,\".",
+        "question": "What does the sign say?"
+      },
+      {
+        "preamble": "(Instructions 4 of 4) In this experiment, you will see the path that someone in the town chooses to take across the map to reach their destination. The red arrows show the path that this person took. Each map will represent a different person taking a new path through the map. For each map, we will ask you whether what the person did was morally acceptable. There are no right answers. Please look at each map, then answer each question with your own best judgment based on the map that you see, as well as your own common sense intuitions about towns and these kinds of destinations in general.",
+        "question": "Does each map represent the path of a new person or the same person each time?"
+      }
+  ],
+  "conditions": [
+    {
+      "name": "Condition 1",
+      "trials": [
+        {
+          "image": "map1_simplepark_0.png",
+          "description": "This is a map of a park in this community with a sign posted in the park that everyone can read which says 'Keep off the grass'.",
+          "goals": [
+            "somebody who slipped on the sidewalk and is howling in pain",
+            "an ice cream truck",
+            "a temporary porta-potty",
+            "a friend that is walking by",
+            "a temporary vaccination clinic",
+            "a police car that is temporarily parked there"
+          ],
+          "question": "How morally acceptable was the behavior of the person in this image? Please provide a number between 0 (completely morally unacceptable) and 100 (completely morally acceptable)."
+        },
+        {
+          "image": "map1_simplepark_2.png",
+          "description": "This is a map of a park in this community with a sign posted in the park that everyone can read which says 'Keep off the grass'.",
+          "goals": [
+            "somebody who slipped on the sidewalk and is howling in pain",
+            "an ice cream truck",
+            "a temporary porta-potty",
+            "a friend that is walking by",
+            "a temporary vaccination clinic",
+            "a police car that is temporarily parked there"
+          ],
+          "question": "How morally acceptable was the behavior of the person in this image? Please provide a number between 0 (completely morally unacceptable) and 100 (completely morally acceptable)."
+        },
+        {
+          "image": "map1_simplepark_4.png",
+          "description": "This is a map of a park in this community with a sign posted in the park that everyone can read which says 'Keep off the grass'.",
+          "goals": [
+            "somebody who slipped on the sidewalk and is howling in pain",
+            "an ice cream truck",
+            "a temporary porta-potty",
+            "a friend that is walking by",
+            "a temporary vaccination clinic",
+            "a police car that is temporarily parked there"
+          ],
+          "question": "How morally acceptable was the behavior of the person in this image? Please provide a number between 0 (completely morally unacceptable) and 100 (completely morally acceptable)."
+        },
+        {
+          "image": "map1_simplepark_6.png",
+          "description": "This is a map of a park in this community with a sign posted in the park that everyone can read which says 'Keep off the grass'.",
+          "goals": [
+            "somebody who slipped on the sidewalk and is howling in pain",
+            "an ice cream truck",
+            "a temporary porta-potty",
+            "a friend that is walking by",
+            "a temporary vaccination clinic",
+            "a police car that is temporarily parked there"
+          ],
+          "question": "How morally acceptable was the behavior of the person in this image? Please provide a number between 0 (completely morally unacceptable) and 100 (completely morally acceptable)."
+        }
+      ]
+    },
+    {
+      "name": "Condition 2",
+      "trials": [
+        {
+          "image": "map1_simplepark_1.png",
+          "description": "This is a map of a park in this community with a sign posted in the park that everyone can read which says 'Keep off the grass'.",
+          "goals": [
+            "somebody who slipped on the sidewalk and is howling in pain",
+            "an ice cream truck",
+            "a temporary porta-potty",
+            "a friend that is walking by",
+            "a temporary vaccination clinic",
+            "a police car that is temporarily parked there"
+          ],
+          "question": "How morally acceptable was the behavior of the person in this image? Please provide a number between 0 (completely morally unacceptable) and 100 (completely morally acceptable)."
+        },
+        {
+          "image": "map1_simplepark_3.png",
+          "description": "This is a map of a park in this community with a sign posted in the park that everyone can read which says 'Keep off the grass'.",
+          "goals": [
+            "somebody who slipped on the sidewalk and is howling in pain",
+            "an ice cream truck",
+            "a temporary porta-potty",
+            "a friend that is walking by",
+            "a temporary vaccination clinic",
+            "a police car that is temporarily parked there"
+          ],
+          "question": "How morally acceptable was the behavior of the person in this image? Please provide a number between 0 (completely morally unacceptable) and 100 (completely morally acceptable)."
+        },
+        {
+          "image": "map1_simplepark_5.png",
+          "description": "This is a map of a park in this community with a sign posted in the park that everyone can read which says 'Keep off the grass'.",
+          "goals": [
+            "somebody who slipped on the sidewalk and is howling in pain",
+            "an ice cream truck",
+            "a temporary porta-potty",
+            "a friend that is walking by",
+            "a temporary vaccination clinic",
+            "a police car that is temporarily parked there"
+          ],
+          "question": "How morally acceptable was the behavior of the person in this image? Please provide a number between 0 (completely morally unacceptable) and 100 (completely morally acceptable)."
+        },
+        {
+          "image": "map1_simplepark_7.png",
+          "description": "This is a map of a park in this community with a sign posted in the park that everyone can read which says 'Keep off the grass'.",
+          "goals": [
+            "somebody who slipped on the sidewalk and is howling in pain",
+            "an ice cream truck",
+            "a temporary porta-potty",
+            "a friend that is walking by",
+            "a temporary vaccination clinic",
+            "a police car that is temporarily parked there"
+          ],
+          "question": "How morally acceptable was the behavior of the person in this image? Please provide a number between 0 (completely morally unacceptable) and 100 (completely morally acceptable)."
+        }
+      ]
+    }
+  ]
+}

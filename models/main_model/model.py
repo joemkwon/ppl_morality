@@ -392,7 +392,8 @@ def generate_forward_model_table(gridworld, trajectory, my_goal_utility, num_bin
 
 if __name__ == "__main__":
     file_name = 'trajectories/map1_8.json'
-    goal_utility = 45
+    # sample goal utility for the friends goal. In the full experiment, we will do this for all 6 goals
+    goal_utility = sample_goal_utility('friend')
 
     gridworld, trajectory = load_gridworld_and_trajectory(file_name)
     

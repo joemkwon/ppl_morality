@@ -1,0 +1,38 @@
+{
+    "instructions": [
+      {
+        "preamble": "(Instructions 1 out of 3) In this experiment, you will be looking at maps which depict a park and the surrounding areas in a medium-sized town. The maps show the location of grass and sidewalks around the park. Every day, about 100 people go through this area on their way to various destinations.",
+        "question": "What does the map that you will see represent?"
+      },
+      {
+        "preamble": "(Instructions 2 out of 3) Here is an example of a map you may see in the experiment. Green squares represent grass, grey squares represent sidewalks, and a gold star inside a square represents a destination that someone might have. You'll be reading about a few different destinations that at least one person went to in the park today.",
+        "question": "What does the star in the map represent?"
+      },
+      {
+        "preamble": "(Instructions 3 out of 3) In each park, there will be a clearly marked sign that everyone can read, which says \"Keep off the grass\".",
+        "question": "What does the sign say?"
+      }
+    ],
+    "trials": [
+      {
+        "image": "blank_map1_simplepark.png",
+        "description": "This is a map of a park in this community with a sign posted in the park that everyone can read which says 'Keep off the grass'.",
+        "questions": [
+          "How fragile do you think the grass is in this community? Provide an integer between 0 (Not at all fragile) and 100 (Extremely fragile).",
+          "For the people in this community, how do you think the average person would feel if the grass in the park were no longer alive? Provide an integer between 0 (Extremely unhappy) and 100 (Extremely happy).",
+          "Now imagine that the gold star represents somebody who slipped on the sidewalk and is howling in pain. Of the about 100 people who travel through this area, what percentage do you think went to this person today? Provide an integer between 0 and 100.",
+          "Now imagine that the gold star represents somebody who slipped on the sidewalk and is howling in pain. For the 100 people who travel through this area, how important do you think it is for the average person who went to this person today, that they reached their destination as quickly as possible? Provide an integer between 0 (Not at all important) and 100 (Extremely important).",
+          "Now imagine that the gold star represents an ice cream truck. Of the about 100 people who travel through this area, what percentage do you think went to the ice cream truck today? Provide an integer between 0 and 100.",
+          "Now imagine that the gold star represents an ice cream truck. For the 100 people who travel through this area, how important do you think it is for the average person who went to the ice cream truck today, that they reached their destination as quickly as possible? Provide an integer between 0 (Not at all important) and 100 (Extremely important).",
+          "Now imagine that the gold star represents a temporary porta-potty. Of the about 100 people who travel through this area, what percentage do you think went to the porta-potty today? Provide an integer between 0 and 100.",
+          "Now imagine that the gold star represents a temporary porta-potty. For the 100 people who travel through this area, how important do you think it is for the average person who went to the porta-potty today, that they reached their destination as quickly as possible? Provide an integer between 0 (Not at all important) and 100 (Extremely important).",
+          "Now imagine that the gold star represents a friend that is walking by. Of the about 100 people who travel through this area, what percentage do you think went to this friend today? Provide an integer between 0 and 100.",
+          "Now imagine that the gold star represents a friend that is walking by. For the 100 people who travel through this area, how important do you think it is for the average person who went to this friend today, that they reached their destination as quickly as possible? Provide an integer between 0 (Not at all important) and 100 (Extremely important).",
+          "Now imagine that the gold star represents a temporary vaccination clinic. Of the about 100 people who travel through this area, what percentage do you think went to the vaccination clinic today? Provide an integer between 0 and 100.",
+          "Now imagine that the gold star represents a temporary vaccination clinic. For the 100 people who travel through this area, how important do you think it is for the average person who went to the vaccination clinic today, that they reached their destination as quickly as possible? Provide an integer between 0 (Not at all important) and 100 (Extremely important).",
+          "Now imagine that the gold star represents a police car that is temporarily parked there. Of the about 100 people who travel through this area, what percentage do you think went to the police car today? Provide an integer between 0 and 100.",
+          "Now imagine that the gold star represents a police car that is temporarily parked there. For the 100 people who travel through this area, how important do you think it is for the average person who went to the police car today, that they reached their destination as quickly as possible? Provide an integer between 0 (Not at all important) and 100 (Extremely important)."
+        ]
+      }
+    ]
+  }
