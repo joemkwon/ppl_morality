@@ -7,7 +7,7 @@ from tqdm import tqdm
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 # Initialize OpenAI client
-client = openai.OpenAI(api_key="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")
+client = openai.OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 # Get the directory of the current script
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
