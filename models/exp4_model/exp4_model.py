@@ -351,9 +351,6 @@ if __name__ == "__main__":
     # Flag to activate grass_capacity sweep
     perform_grass_capacity_sweep = True  # Set to True to activate the sweep
 
-    # List of grass_capacity values to sweep over
-    grass_capacity_values = range(100, 251, 25)  # From 100 to 250 inclusive, increments of 25
-
     # List of file names to process
     file_names = [
         'trajectories/map1_1.json',
@@ -439,13 +436,13 @@ if __name__ == "__main__":
     # Function to get the grass capacity values based on the flag
     def get_grass_capacity_values():
         if perform_grass_capacity_sweep:
-            return list(range(100, 251, 25))  # From 100 to 250 inclusive, increments of 25
+            return list(range(250, 325, 25))  # From 100 to 250 inclusive, increments of 25
         else:
             return [default_grass_capacity]
 
     # List of goals to analyze
-    # goals_to_analyze = ['a friend', 'pain', 'ice cream', 'vac clinic', 'porta-potty', 'police car']
-    goals_to_analyze = ['porta-potty']
+    goals_to_analyze = ['a friend', 'pain', 'ice cream', 'vac clinic', 'porta-potty', 'police car']
+    # goals_to_analyze = ['porta-potty']
 
     # Prepare data structure to collect results for plotting
     results_for_plotting = {}
