@@ -23,7 +23,7 @@
       "trials": [
         {
           "image": "map1_simplepark_0.png",
-          "description": "This is a map of a park in this community with a sign posted in the park that everyone can read which says 'Keep off the grass'.",
+          "description": "This is a map of a park in this community. This park has a sign posted in the park that everyone can read which says 'Keep off the grass'.",
           "goals": [
             "somebody who slipped on the sidewalk and is howling in pain",
             "an ice cream truck",
@@ -36,7 +36,7 @@
         },
         {
           "image": "map1_simplepark_2.png",
-          "description": "This is a map of a park in this community with a sign posted in the park that everyone can read which says 'Keep off the grass'.",
+          "description": "This is a map of a park in this community. This park has a sign posted in the park that everyone can read which says 'Keep off the grass'.",
           "goals": [
             "somebody who slipped on the sidewalk and is howling in pain",
             "an ice cream truck",
@@ -49,7 +49,7 @@
         },
         {
           "image": "map1_simplepark_4.png",
-          "description": "This is a map of a park in this community with a sign posted in the park that everyone can read which says 'Keep off the grass'.",
+          "description": "This is a map of a park in this community. This park has a sign posted in the park that everyone can read which says 'Keep off the grass'.",
           "goals": [
             "somebody who slipped on the sidewalk and is howling in pain",
             "an ice cream truck",
@@ -62,7 +62,7 @@
         },
         {
           "image": "map1_simplepark_6.png",
-          "description": "This is a map of a park in this community with a sign posted in the park that everyone can read which says 'Keep off the grass'.",
+          "description": "This is a map of a park in this community. This park has a sign posted in the park that everyone can read which says 'Keep off the grass'.",
           "goals": [
             "somebody who slipped on the sidewalk and is howling in pain",
             "an ice cream truck",
@@ -80,7 +80,7 @@
       "trials": [
         {
           "image": "map1_simplepark_1.png",
-          "description": "This is a map of a park in this community with a sign posted in the park that everyone can read which says 'Keep off the grass'.",
+          "description": "This is a map of a park in this community. This park has a sign posted in the park that everyone can read which says 'Keep off the grass'.",
           "goals": [
             "somebody who slipped on the sidewalk and is howling in pain",
             "an ice cream truck",
@@ -93,7 +93,7 @@
         },
         {
           "image": "map1_simplepark_3.png",
-          "description": "This is a map of a park in this community with a sign posted in the park that everyone can read which says 'Keep off the grass'.",
+          "description": "This is a map of a park in this community. This park has a sign posted in the park that everyone can read which says 'Keep off the grass'.",
           "goals": [
             "somebody who slipped on the sidewalk and is howling in pain",
             "an ice cream truck",
@@ -106,7 +106,7 @@
         },
         {
           "image": "map1_simplepark_5.png",
-          "description": "This is a map of a park in this community with a sign posted in the park that everyone can read which says 'Keep off the grass'.",
+          "description": "This is a map of a park in this community. This park has a sign posted in the park that everyone can read which says 'Keep off the grass'.",
           "goals": [
             "somebody who slipped on the sidewalk and is howling in pain",
             "an ice cream truck",
@@ -119,7 +119,7 @@
         },
         {
           "image": "map1_simplepark_7.png",
-          "description": "This is a map of a park in this community with a sign posted in the park that everyone can read which says 'Keep off the grass'.",
+          "description": "This is a map of a park in this community. This park has a sign posted in the park that everyone can read which says 'Keep off the grass'.",
           "goals": [
             "somebody who slipped on the sidewalk and is howling in pain",
             "an ice cream truck",

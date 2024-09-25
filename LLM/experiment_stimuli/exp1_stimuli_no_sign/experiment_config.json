@@ -12,7 +12,7 @@
     "trials": [
       {
         "image": "blank_map1_simplepark.png",
-        "description": "This is a map of a park in this community with a sign posted in the park that everyone can read which says 'Keep off the grass'.",
+        "description": "This is a map of a park in this community.",
         "questions": [
           "How fragile do you think the grass is in this community? Provide an integer between 0 (Not at all fragile) and 100 (Extremely fragile).",
           "For the people in this community, how do you think the average person would feel if the grass in the park were no longer alive? Provide an integer between 0 (Extremely unhappy) and 100 (Extremely happy).",

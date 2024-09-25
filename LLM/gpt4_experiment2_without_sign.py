@@ -5,6 +5,7 @@ import argparse
 import base64
 from tqdm import tqdm
 from tenacity import retry, stop_after_attempt, wait_exponential
+import re 
 
 # Initialize OpenAI client
 client = openai.OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
@@ -12,7 +13,7 @@ client = openai.OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 @retry(stop=stop_after_attempt(10), wait=wait_exponential(multiplier=1, min=1, max=50))
-def get_gpt_response(messages, temperature=0.5):
+def get_gpt_response(messages, temperature=0.1):
     response = client.chat.completions.create(
         model="gpt-4o",
         messages=messages,
@@ -52,30 +53,51 @@ def run_instructions(instructions):
         })
     return results
 
+def parse_moral_judgment(response):
+    match = re.search(r'\[value\]\s*(-?\d+)\s*\[/value\]', response)
+    if match:
+        value = int(match.group(1))
+        return value if 0 <= value <= 100 else None
+    return None
+
+def get_valid_response(messages, temperature=0.5):
+    while True:
+        response = get_gpt_response(messages, temperature)
+        moral_judgment = parse_moral_judgment(response)
+        if moral_judgment is not None:
+            return response, moral_judgment
+
 def run_trial(trial, context):
     results = []
-    system_prompt = "Answer the following questions based on the information provided. Give your best judgment even if the information is incomplete. Verbalize your step by step reasoning and thinking process. Then, provide the number in this format: [value] number [/value]. For example: [value] 42 [/value]."
-    messages = [
+    # system_prompt = "Answer the following questions based on the information provided. Give your best judgment even if the information is incomplete. Verbalize your step by step reasoning and thinking process. Then, provide the number in this format: [value] number [/value]. For example: [value] 42 [/value]."
+    system_prompt = "Answer the following questions based on the information provided. Do not make any excuses about not having enough information or some other reason for not being able to answer. Based on your best judgment, provide only provide the number as your answer in this format: [value] number [/value]. For example: [value] 42 [/value]. Do not include any other text or explanation."
+    
+    base_messages = [
         {"role": "system", "content": system_prompt},
         {"role": "user", "content": context}
     ]
     
     image_path = os.path.join(SCRIPT_DIR, 'experiment_stimuli', 'exp2_stimuli_no_sign', trial['image'])
-    messages.append({"role": "user", "content": create_image_message(image_path, trial['description'])})
+    base_messages.append({"role": "user", "content": create_image_message(image_path, trial['description'])})
     
     for goal in trial['goals']:
+        messages = base_messages.copy()
         question = f"Now imagine that the gold star represents {goal}. {trial['question']}"
         messages.append({"role": "user", "content": question})
         responses = []
+        moral_judgments = []
+        
         for _ in tqdm(range(50), desc="Sampling responses"):
-            response = get_gpt_response(messages, temperature=0.5)
+            response, moral_judgment = get_valid_response(messages, temperature=1.0)
             responses.append(response)
-            
+            moral_judgments.append(moral_judgment)
+        
         results.append({
             "image": trial['image'],
             "goal": goal,
             "question": question,
-            "responses": responses
+            "responses": responses,
+            "moral_judgments": moral_judgments
         })
     
     return results, system_prompt
