@@ -1,0 +1,214 @@
+{
+  "gridworld": [
+    [
+      "S",
+      "S",
+      "S",
+      "S",
+      "S",
+      "S",
+      "S",
+      "S",
+      "S",
+      "S"
+    ],
+    [
+      "S",
+      "G",
+      "G",
+      "G",
+      "S",
+      "G",
+      "G",
+      "G",
+      "G",
+      "S"
+    ],
+    [
+      "S",
+      "G",
+      "G",
+      "G",
+      "S",
+      "G",
+      "G",
+      "G",
+      "G",
+      "S"
+    ],
+    [
+      "S",
+      "G",
+      "G",
+      "G",
+      "S",
+      "G",
+      "G",
+      "G",
+      "G",
+      "S"
+    ],
+    [
+      "S",
+      "G",
+      "G",
+      "G",
+      "S",
+      "G",
+      "G",
+      "G",
+      "G",
+      "S"
+    ],
+    [
+      "S",
+      "G",
+      "G",
+      "G",
+      "S",
+      "G",
+      "G",
+      "G",
+      "G",
+      "S"
+    ],
+    [
+      "S",
+      "G",
+      "G",
+      "G",
+      "S",
+      "G",
+      "G",
+      "G",
+      "G",
+      "S"
+    ],
+    [
+      "S",
+      "G",
+      "G",
+      "G",
+      "S",
+      "G",
+      "G",
+      "G",
+      "G",
+      "S"
+    ],
+    [
+      "S",
+      "G",
+      "G",
+      "G",
+      "S",
+      "G",
+      "G",
+      "G",
+      "G",
+      "S"
+    ],
+    [
+      "S",
+      "S",
+      "S",
+      "S",
+      "S",
+      "S",
+      "S",
+      "S",
+      "S",
+      "S"
+    ]
+  ],
+  "trajectory": [
+    {
+      "coordinate": [
+        0,
+        9
+      ],
+      "type": "S",
+      "action": "north"
+    },
+    {
+      "coordinate": [
+        0,
+        8
+      ],
+      "type": "S",
+      "action": "north-east"
+    },
+    {
+      "coordinate": [
+        1,
+        7
+      ],
+      "type": "G",
+      "action": "north-east"
+    },
+    {
+      "coordinate": [
+        2,
+        6
+      ],
+      "type": "G",
+      "action": "north-east"
+    },
+    {
+      "coordinate": [
+        3,
+        5
+      ],
+      "type": "G",
+      "action": "north-east"
+    },
+    {
+      "coordinate": [
+        4,
+        4
+      ],
+      "type": "S",
+      "action": "north-east"
+    },
+    {
+      "coordinate": [
+        5,
+        3
+      ],
+      "type": "G",
+      "action": "north-east"
+    },
+    {
+      "coordinate": [
+        6,
+        2
+      ],
+      "type": "G",
+      "action": "north-east"
+    },
+    {
+      "coordinate": [
+        7,
+        1
+      ],
+      "type": "G",
+      "action": "north-east"
+    },
+    {
+      "coordinate": [
+        8,
+        0
+      ],
+      "type": "S",
+      "action": "east"
+    },
+    {
+      "coordinate": [
+        9,
+        0
+      ],
+      "type": "F",
+      "action": null
+    }
+  ]
+}

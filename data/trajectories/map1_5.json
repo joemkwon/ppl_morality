@@ -1,0 +1,230 @@
+{
+  "gridworld": [
+    [
+      "S",
+      "S",
+      "S",
+      "S",
+      "S",
+      "S",
+      "S",
+      "S",
+      "S",
+      "S"
+    ],
+    [
+      "S",
+      "G",
+      "G",
+      "G",
+      "S",
+      "G",
+      "G",
+      "G",
+      "G",
+      "S"
+    ],
+    [
+      "S",
+      "G",
+      "G",
+      "G",
+      "S",
+      "G",
+      "G",
+      "G",
+      "G",
+      "S"
+    ],
+    [
+      "S",
+      "G",
+      "G",
+      "G",
+      "S",
+      "G",
+      "G",
+      "G",
+      "G",
+      "S"
+    ],
+    [
+      "S",
+      "G",
+      "G",
+      "G",
+      "S",
+      "G",
+      "G",
+      "G",
+      "G",
+      "S"
+    ],
+    [
+      "S",
+      "G",
+      "G",
+      "G",
+      "S",
+      "G",
+      "G",
+      "G",
+      "G",
+      "S"
+    ],
+    [
+      "S",
+      "G",
+      "G",
+      "G",
+      "S",
+      "G",
+      "G",
+      "G",
+      "G",
+      "S"
+    ],
+    [
+      "S",
+      "G",
+      "G",
+      "G",
+      "S",
+      "G",
+      "G",
+      "G",
+      "G",
+      "S"
+    ],
+    [
+      "S",
+      "G",
+      "G",
+      "G",
+      "S",
+      "G",
+      "G",
+      "G",
+      "G",
+      "S"
+    ],
+    [
+      "S",
+      "S",
+      "S",
+      "S",
+      "S",
+      "S",
+      "S",
+      "S",
+      "S",
+      "S"
+    ]
+  ],
+  "trajectory": [
+    {
+      "coordinate": [
+        0,
+        9
+      ],
+      "type": "S",
+      "action": "north"
+    },
+    {
+      "coordinate": [
+        0,
+        8
+      ],
+      "type": "S",
+      "action": "north"
+    },
+    {
+      "coordinate": [
+        0,
+        7
+      ],
+      "type": "S",
+      "action": "north"
+    },
+    {
+      "coordinate": [
+        0,
+        6
+      ],
+      "type": "S",
+      "action": "north-east"
+    },
+    {
+      "coordinate": [
+        1,
+        5
+      ],
+      "type": "G",
+      "action": "north-east"
+    },
+    {
+      "coordinate": [
+        2,
+        4
+      ],
+      "type": "G",
+      "action": "north-east"
+    },
+    {
+      "coordinate": [
+        3,
+        3
+      ],
+      "type": "G",
+      "action": "north-east"
+    },
+    {
+      "coordinate": [
+        4,
+        2
+      ],
+      "type": "S",
+      "action": "north-east"
+    },
+    {
+      "coordinate": [
+        5,
+        1
+      ],
+      "type": "G",
+      "action": "north-east"
+    },
+    {
+      "coordinate": [
+        6,
+        0
+      ],
+      "type": "S",
+      "action": "east"
+    },
+    {
+      "coordinate": [
+        7,
+        0
+      ],
+      "type": "S",
+      "action": "east"
+    },
+    {
+      "coordinate": [
+        8,
+        0
+      ],
+      "type": "S",
+      "action": "east"
+    },
+    {
+      "coordinate": [
+        9,
+        0
+      ],
+      "type": "F",
+      "action": null
+    }
+  ]
+}

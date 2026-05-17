@@ -1,0 +1,29 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite the paper below."
+title: "What do moral rules mean? (model code)"
+type: software
+authors:
+  - family-names: Kwon
+    given-names: Joe
+  - family-names: Wong
+    given-names: Lio
+  - family-names: Tenenbaum
+    given-names: Josh
+  - family-names: Levine
+    given-names: Sydney
+repository-code: "https://github.com/joemkwon/ppl_morality"
+license: MIT
+preferred-citation:
+  type: conference-paper
+  title: "What do moral rules mean?"
+  authors:
+    - family-names: Kwon
+      given-names: Joe
+    - family-names: Wong
+      given-names: Lio
+    - family-names: Tenenbaum
+      given-names: Josh
+    - family-names: Levine
+      given-names: Sydney
+  collection-title: "Proceedings of the Annual Meeting of the Cognitive Science Society (CogSci)"
+  year: 2025
