@@ -1,7 +1,7 @@
 # What do moral rules mean?
 
 Model code for **Kwon, Wong, Tenenbaum & Levine, "What do moral rules mean?",
-*Proceedings of CogSci 2025*.**
+*Proceedings of CogSci 2026*.**
 
 People interpret a simple rule like *"keep off the grass"* by reasoning about
 the rule's *purpose*. This repository implements that idea as a computational
@@ -13,9 +13,7 @@ given shortcut must be — which predicts how permissible the shortcut seems.
 > **Provenance / cleanup note.** This is a cleaned, deduplicated, reproducible
 > release. The accepted paper's figures were produced by the Python code in the
 > old `models/exp2_model/` and `models/exp4_model/` (now unified into the
-> `moral_rules` package). The pre-cleanup state is preserved in git under the
-> tag **`legacy-2024`**. An unrelated abandoned Julia repository
-> (`joemkwon/line_modeling`) is **not** part of this work.
+> `moral_rules` package). 
 
 ## Install
 
